@@ -1,35 +1,37 @@
 # plugins
 
-Claude Code plugins by [muzomer](https://github.com/muzomer), published as the
-`muzomer` plugin marketplace.
+A Claude Code plugin marketplace maintained by [muzomer](https://github.com/muzomer)
+and published under the marketplace name `muzomer`.
 
-| Plugin | What it does |
+| Plugin | Description |
 |---|---|
-| [`beads-workflow`](#beads-workflow) | Implement [Beads](https://github.com/gastownhall/beads) issues and epics with implementer, reviewer and reviser agents; each bead becomes one reviewed jj or git commit on its own branch |
+| [`beads-workflow`](#beads-workflow) | Implements [Beads](https://github.com/gastownhall/beads) issues and epics through implementer, reviewer and reviser agents, producing one reviewed jj or git commit per bead on a dedicated branch |
 
-## Install
+## Installation
 
-Add the marketplace once, then install a plugin. Pick the scope that fits:
+Installation takes two steps: register the marketplace, then install the plugin.
+The installation scope determines where the plugin is available:
 
-| Scope | Who gets it | Flag |
+| Scope | Availability | Flag |
 |---|---|---|
-| `user` (default) | you, in every project | no flag |
-| `project` | everyone who opens this repo (written to `.claude/settings.json`, commit it) | `--scope project` |
-| `local` | you, in this repo only (not committed) | `--scope local` |
+| `user` (default) | The current user, in every project | none |
+| `project` | Every collaborator on the repository; recorded in `.claude/settings.json`, which is committed | `--scope project` |
+| `local` | The current user, in the current repository only; not committed | `--scope local` |
 
-Pass the same `--scope` to both commands, so the marketplace is registered
-where the plugin is enabled:
+Both commands require the same `--scope` value, so that the marketplace is
+registered at the same level as the plugin:
 
 ```sh
-claude plugin marketplace add muzomer/plugins  # add --scope project|local if needed
-claude plugin install beads-workflow@muzomer    # same --scope here
+claude plugin marketplace add muzomer/plugins  # append --scope project|local when required
+claude plugin install beads-workflow@muzomer    # use the same --scope value
 ```
 
-Inside Claude Code the same works with `/plugin marketplace add muzomer/plugins`
-and `/plugin install beads-workflow@muzomer`.
+The equivalent commands inside Claude Code are
+`/plugin marketplace add muzomer/plugins` and `/plugin install beads-workflow@muzomer`.
 
-For a project, you can instead commit this to `.claude/settings.json`, so
-teammates are asked to install the plugin when they trust the folder:
+For project-wide adoption, an alternative is to commit the following to
+`.claude/settings.json`. Claude Code then prompts each collaborator to install
+the plugin upon trusting the repository folder:
 
 ```json
 {
@@ -42,39 +44,40 @@ teammates are asked to install the plugin when they trust the folder:
 
 ## beads-workflow
 
-Turns Beads issues into reviewed commits, one bead at a time. You stay the
-approver: it never pushes and never closes a bead.
+Converts Beads issues into reviewed commits, one bead at a time. The repository
+owner remains the approver: the workflow never pushes and never closes a bead.
 
 | Component | Name | Role |
 |---|---|---|
-| Skill | `/beads-workflow:run-bead <id>` | Run one bead |
-| Skill | `/beads-workflow:run-epic <id>` | Run every ready child of an epic, in dependency order |
-| Agent | `beads-workflow:implementer` | Writes the change (uncommitted) |
-| Agent | `beads-workflow:reviewer` | Read-only review against the acceptance criteria |
-| Agent | `beads-workflow:reviser` | Fixes the reviewer's blocker findings |
+| Skill | `/beads-workflow:run-bead <id>` | Runs a single bead |
+| Skill | `/beads-workflow:run-epic <id>` | Runs every ready child of an epic, in dependency order |
+| Agent | `beads-workflow:implementer` | Implements the change, without committing |
+| Agent | `beads-workflow:reviewer` | Reviews the change against the acceptance criteria (read-only) |
+| Agent | `beads-workflow:reviser` | Resolves the blocker findings raised by the reviewer |
 
-Per bead: implement -> run the quality gate -> review -> revise (max 3 rounds)
--> commit with a Conventional Commit message on its own branch
-(`type-short-summary`), stacked on the previous bead. In jj this is a bookmark
-plus `jj new`; in git, a new branch from the current `HEAD`. A repo where
-`jj root` works is treated as jj, even when it is colocated with git.
+Each bead follows the same sequence: implementation, quality gate, review,
+revision (at most three rounds), and a commit with a Conventional Commit message
+on a dedicated branch named `type-short-summary`, stacked on the previous bead.
+In jj, the branch is a bookmark followed by `jj new`; in git, a new branch
+created from the current `HEAD`. Any repository in which `jj root` succeeds is
+treated as a jj repository, including repositories colocated with git.
 
 ### Requirements
 
-- [`bd`](https://github.com/gastownhall/beads) (written against bd 1.2.2; needs
-  `bd update --claim` and `--set-metadata`)
+- [`bd`](https://github.com/gastownhall/beads), written against version 1.2.2;
+  `bd update --claim` and `--set-metadata` are required
 - `jq`
 - `jj` or `git`
-- Optional: `hunk` - the final report
-  suggests `hunk show <branch>` when it is installed
+- `hunk` (optional): when installed, the final report suggests `hunk show <branch>`
 
-### Set up your project
+### Project setup
 
-Each bead must have **acceptance criteria**; beads without them are flagged for
-you instead of being implemented.
+Every bead requires **acceptance criteria**. Beads without acceptance criteria
+are flagged for a human decision instead of being implemented.
 
-Add a `## Quality gates` section to the project's root `CLAUDE.md`. The skill
-picks the row for the area a bead touches and runs it after every change:
+The project's root `CLAUDE.md` requires a `## Quality gates` section. The
+workflow selects the row matching the area a bead touches and runs the
+corresponding command after every change:
 
 ```markdown
 ## Quality gates
@@ -85,25 +88,27 @@ picks the row for the area a bead touches and runs it after every change:
 | `web/` | `pnpm --dir web lint && pnpm --dir web test` |
 ```
 
-Without this section the skill asks you for the gate before it starts.
+When the section or the matching row is missing, the workflow requests the gate
+command before starting.
 
-### What it writes to your beads
+### Data recorded on beads
 
 | Kind | Name | Meaning |
 |---|---|---|
-| Label | `needs-review` | Committed; waiting for you to review and close |
-| Label | `human` | Blocked on your decision; the question is in the bead notes |
-| Metadata | `gate` | `pass` or `fail` of the last gate run |
-| Metadata | `verdict`, `review_round` | Last review result and round |
-| Metadata | `bookmark`, `change`, `rounds` | Branch name (jj or git), change or commit id, review rounds used |
+| Label | `needs-review` | Committed and awaiting review and closure by the owner |
+| Label | `human` | Blocked on an owner decision; the open question is in the bead notes |
+| Metadata | `gate` | Result of the last gate run: `pass` or `fail` |
+| Metadata | `verdict`, `review_round` | Result and round number of the last review |
+| Metadata | `bookmark`, `change`, `rounds` | Branch name (jj or git), change or commit ID, and review rounds used |
 
-Notes hold the reviewer's findings (`blocker|nit file:line - problem`) and the
-reviser's replies.
+Bead notes hold the reviewer's findings, in the format
+`blocker|nit file:line - problem`, and the reviser's replies.
 
-To answer a `human` bead: write the answer with `bd update <id> --notes "..."`,
-remove the label with `bd label remove <id> human`, and run the bead again.
-Don't use `bd human respond`: it closes the bead.
+To answer a bead labelled `human`, record the answer with
+`bd update <id> --notes "..."`, remove the label with
+`bd label remove <id> human`, and run the bead again. `bd human respond` is not
+suitable, because the command closes the bead.
 
 ## License
 
-[MIT](LICENSE)
+Released under the [MIT License](LICENSE).
