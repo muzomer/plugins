@@ -1,0 +1,12 @@
+{
+  "name": "muzomer",
+  "owner": { "name": "Muzaffar Omer", "url": "https://github.com/muzomer" },
+  "description": "Claude Code plugins by muzomer",
+  "plugins": [
+    {
+      "name": "beads-workflow",
+      "source": "./plugins/beads-workflow",
+      "description": "Run beads and epics through implement -> review -> revise agents, one jj change per bead"
+    }
+  ]
+}
