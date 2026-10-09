@@ -6,7 +6,7 @@
     {
       "name": "beads-workflow",
       "source": "./plugins/beads-workflow",
-      "description": "Run beads and epics through implement -> review -> revise agents, one jj change per bead"
+      "description": "Run beads and epics through implement -> review -> revise agents, one jj or git commit per bead"
     }
   ]
 }

@@ -1,9 +1,9 @@
 {
   "name": "beads-workflow",
   "version": "0.1.0",
-  "description": "Run beads and epics through implement -> review -> revise agents, one jj change per bead",
+  "description": "Run beads and epics through implement -> review -> revise agents, one jj or git commit per bead",
   "author": { "name": "Muzaffar Omer", "url": "https://github.com/muzomer" },
   "repository": "https://github.com/muzomer/agent-skills",
   "license": "MIT",
-  "keywords": ["beads", "jj", "jujutsu", "code-review", "agents"]
+  "keywords": ["beads", "jj", "jujutsu", "git", "code-review", "agents"]
 }

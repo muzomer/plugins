@@ -1,6 +1,6 @@
 ---
 name: run-bead
-description: Run one bead through implement -> review -> revise with the implementer, reviewer and reviser agents, then commit it and create a jj bookmark for the owner to review. Use when the user says "/beads-workflow:run-bead <bead-id>" or asks to run, implement, or process a single bead. run-epic follows these same steps for each child bead. Also use it, without being named, whenever the user confirms or approves implementing a bead (e.g. "go ahead", "yes, implement it", "do <id>") — never implement a bead inline. Use run-epic instead when the approved ID is an epic.
+description: Run one bead through implement -> review -> revise with the implementer, reviewer and reviser agents, then commit it and create a branch (jj bookmark or git branch) for the owner to review. Use when the user says "/beads-workflow:run-bead <bead-id>" or asks to run, implement, or process a single bead. run-epic follows these same steps for each child bead. Also use it, without being named, whenever the user confirms or approves implementing a bead (e.g. "go ahead", "yes, implement it", "do <id>") — never implement a bead inline. Use run-epic instead when the approved ID is an epic.
 ---
 
 # Run bead
@@ -12,6 +12,27 @@ yourself. Never push.
 This file owns the per-bead steps. `run-epic` follows them for each child, so a
 change here changes both.
 
+## Version control
+
+Works in jj and git repos. Detect once per run: if `jj root` succeeds, use jj,
+even when a `.git` sits next to it (colocated repo); otherwise use git. Pass
+`vcs: jj` or `vcs: git` to every agent, so the check lives only here.
+
+The steps below name a row of this table, never a raw command:
+
+| Operation | jj | git |
+|---|---|---|
+| status | `jj status` | `git status --porcelain` |
+| log | `jj log` | `git log --oneline` |
+| commit | `jj describe -m "<msg>"` | `git switch -c <branch>`, `git add -A`, `git commit -m "<msg>"` |
+| branch | `jj bookmark create <branch>` | nothing: `commit` already made it |
+| next | `jj new` | nothing: HEAD is already on the new branch |
+| change id | `jj log -r @- --no-graph -T 'change_id.short()'` | `git rev-parse --short HEAD` |
+
+In git, each bead's branch starts from the previous bead's branch, so the
+branches form the same stack as jj bookmarks. If `git switch -c` fails because
+the branch exists, pick another name; never reset or overwrite a branch.
+
 ## Before you start (single bead only)
 
 `run-epic` already picks beads that pass these checks; when run on its own, check
@@ -19,15 +40,16 @@ them and stop with a one-line reason if any fails:
 
 - The bead is not closed, and has neither the `needs-review` nor the `human` label.
 - Every `blocks` dependency is closed or has `needs-review`. A `needs-review`
-  blocker counts as done because its commit is already in the jj stack; make sure
-  `@` sits on top of that commit (`jj log`) so this bead stacks on it.
+  blocker counts as done because its commit is already in the stack; make sure
+  the working copy (jj `@`, git `HEAD`) sits on top of that commit (`log`) so
+  this bead stacks on it.
 
 ## Steps
 
 1. **Pre-flight.** `bd show <id> --json | jq '.[0] | {title, acceptance_criteria, design}'`.
    No acceptance criteria, or the bead is clearly more than one small change:
    write the question in the notes, `bd label add <id> human`, stop this bead.
-2. **Implement.** Run the `beads-workflow:implementer` agent with the bead ID and the gate command
+2. **Implement.** Run the `beads-workflow:implementer` agent with the bead ID, `vcs`, and the gate command
    for the touched app (see "Gate commands" below). `BLOCKED: human` -> stop this bead.
 3. **Gate.** Run the gate yourself, each command as a plain line (never through a
    shell variable: fish does not split it) and check the exit code. Exit 127 means
@@ -37,20 +59,19 @@ them and stop with a one-line reason if any fails:
    `bd update <id> --set-metadata gate=pass|fail`.
 4. **Review loop, max 3 rounds.** Before each review run
    `bd update <id> --unset-metadata verdict` so an old verdict cannot be read as new.
-   Run the `beads-workflow:reviewer` (bead ID + round number), then read the verdict from the bead:
+   Run the `beads-workflow:reviewer` (bead ID + round number + `vcs`), then read the verdict from the bead:
    `bd show <id> --json | jq -r '.[0].metadata.verdict // empty'`. If it is empty, use
    the `VERDICT:` line of the reviewer's return.
    - `CLEAN` -> step 5.
-   - `ISSUES` -> run the `beads-workflow:reviser` (bead ID + gate command), run the gate, review again.
+   - `ISSUES` -> run the `beads-workflow:reviser` (bead ID + `vcs` + gate command), run the gate, review again.
    - Still ISSUES after round 3, or no verdict anywhere: flag `human`, stop this bead.
-5. **Commit.** Before `jj describe`, run `jj status`: every changed file must
-   belong to this bead. Anything else (another session, a leftover agent) ->
-   stop and ask the owner.
-   `jj describe` with a Conventional Commit message
-   (`type(scope): summary`) plus the trailers from the session's attribution rules.
-   Then `jj bookmark create <type-short-summary>`, then `jj new` so the next bead
-   stacks on top. `bd label add <id> needs-review`. Record
-   `bd update <id> --set-metadata bookmark=<name> --set-metadata change=<id> --set-metadata rounds=<n>`.
+5. **Commit.** First run `status`: every changed file must belong to this bead.
+   Anything else (another session, a leftover agent) -> stop and ask the owner.
+   Then run `commit` with a Conventional Commit message (`type(scope): summary`)
+   plus the trailers from the session's attribution rules, using the branch name
+   `<type-short-summary>`. Then `branch`, then `next`, so the next bead stacks
+   on top. `bd label add <id> needs-review`. Record
+   `bd update <id> --set-metadata bookmark=<branch> --set-metadata change=<change id> --set-metadata rounds=<n>`.
    Leave the bead open.
 
 An agent that stops at its turn limit returns partial output with an agent ID:
@@ -72,14 +93,14 @@ area: ask the owner for the gate before step 2, and suggest adding the section.
 ## Final report (single bead only)
 
 Short. Do not restate findings. Print one of:
-- ready for review: `hunk show <bookmark>`, and rounds used (`metadata.rounds`)
+- ready for review: `hunk show <branch>`, and rounds used (`metadata.rounds`)
 - needs the owner's decision: the bead ID and the question from its notes
 - not started: the failed check from "Before you start"
 
 ## Rules
 
 - Never push, never close a bead (including via `bd human respond`): the owner approves first.
-- One bookmark per bead, stacked in order.
+- One branch per bead, stacked in order.
 - Stop every agent (`TaskStop <agent-id>`) as soon as you have read its return,
   before the next step. An agent can report DONE while its own background
   commands still run, and one that keeps going can edit files after the bead
