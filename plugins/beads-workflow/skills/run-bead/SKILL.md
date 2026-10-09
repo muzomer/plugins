@@ -1,6 +1,6 @@
 ---
 name: run-bead
-description: Run one bead through implement -> review -> revise with the implementer, reviewer and reviser agents, then commit it and create a branch (jj bookmark or git branch) for the owner to review. Use when the user says "/beads-workflow:run-bead <bead-id>" or asks to run, implement, or process a single bead. run-epic follows these same steps for each child bead. Also use it, without being named, whenever the user confirms or approves implementing a bead (e.g. "go ahead", "yes, implement it", "do <id>") — never implement a bead inline. Use run-epic instead when the approved ID is an epic.
+description: Implement one Beads (`bd`) issue end to end - an implementer agent writes it, a reviewer agent checks it against the acceptance criteria, a reviser agent fixes findings (max 3 rounds) - then commit it on its own jj bookmark or git branch for the owner to review. Never pushes or closes the bead. Use when the user runs "/beads-workflow:run-bead <bead-id>", asks to run, implement, or process a bead by ID, or approves implementing a specific bead ID that was just discussed (e.g. "yes, implement bd-12", or "go ahead" right after bd-12 was proposed) - never implement a bead inline. Use run-epic instead when the ID is an epic.
 ---
 
 # Run bead
@@ -52,7 +52,8 @@ them and stop with a one-line reason if any fails:
 2. **Implement.** Run the `beads-workflow:implementer` agent with the bead ID, `vcs`, and the gate command
    for the touched app (see "Gate commands" below). `BLOCKED: human` -> stop this bead.
 3. **Gate.** Run the gate yourself, each command as a plain line (never through a
-   shell variable: fish does not split it) and check the exit code. Exit 127 means
+   shell variable: shells such as fish do not split it into words) and check
+   the exit code. Exit 127 means
    the command was not found, not a failed gate: fix the command. If the gate
    fails, write `GATE FAILED: <command> exited <code>` plus the error into the bead
    notes, run the `beads-workflow:reviser`, and skip the review this round. Record the result with
@@ -71,7 +72,8 @@ them and stop with a one-line reason if any fails:
    plus the trailers from the session's attribution rules, using the branch name
    `<type-short-summary>`. Then `branch`, then `next`, so the next bead stacks
    on top. `bd label add <id> needs-review`. Record
-   `bd update <id> --set-metadata bookmark=<branch> --set-metadata change=<change id> --set-metadata rounds=<n>`.
+   `bd update <id> --set-metadata bookmark=<branch> --set-metadata change=<change id> --set-metadata rounds=<n>`
+   (the key is `bookmark` in git repos too, so older beads keep working).
    Leave the bead open.
 
 An agent that stops at its turn limit returns partial output with an agent ID:
@@ -93,7 +95,9 @@ area: ask the owner for the gate before step 2, and suggest adding the section.
 ## Final report (single bead only)
 
 Short. Do not restate findings. Print one of:
-- ready for review: `hunk show <branch>`, and rounds used (`metadata.rounds`)
+- ready for review: the branch, the command to view it (`jj show <branch>` or
+  `git show <branch>`; `hunk show <branch>` if `hunk` is installed), and rounds
+  used (`metadata.rounds`)
 - needs the owner's decision: the bead ID and the question from its notes
 - not started: the failed check from "Before you start"
 

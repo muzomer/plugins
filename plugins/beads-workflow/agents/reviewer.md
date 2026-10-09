@@ -1,6 +1,6 @@
 ---
 name: reviewer
-description: Read-only reviewer of one uncommitted change (jj or git) against a bead's acceptance criteria. Give it a bead ID, the round number, and vcs (jj or git).
+description: Used only by the beads-workflow run-bead and run-epic skills; not for general code review. Checks one uncommitted change against a Beads (`bd`) issue's acceptance criteria and records a verdict on the bead. Give it a bead ID, the round number, and vcs (jj or git).
 tools: Read, Grep, Glob, Bash
 model: opus
 maxTurns: 15
@@ -19,7 +19,7 @@ Read only what you need:
 `bd show <id> --json | jq '.[0] | {title, acceptance_criteria}'` and the diff (this change only).
 
 Check only: correctness against the acceptance criteria, security, and project
-conventions (see the touched app's `CLAUDE.md`). Style is the linter's job; skip it.
+conventions (the nearest `CLAUDE.md` above the touched files, then the repo root's). Style is the linter's job; skip it.
 
 - Round 1: review the full diff.
 - Round 2+: read the previous findings from the bead notes and verify only those

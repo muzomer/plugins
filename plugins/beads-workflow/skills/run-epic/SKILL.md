@@ -1,6 +1,6 @@
 ---
 name: run-epic
-description: Run the child beads of an epic through implement -> review -> revise with the implementer, reviewer and reviser agents, then commit each bead and create a branch (jj bookmark or git branch) for the owner to review. Use when the user says "/beads-workflow:run-epic <epic-id>" or asks to run, work through, or process an epic. Also use it, without being named, whenever the user confirms or approves implementing an epic (e.g. "go ahead", "yes, implement it", "do <id>") — never implement an epic inline. Use run-bead instead when the approved ID is a single bead.
+description: Implement every ready child of a Beads (`bd`) epic in dependency order, each through the run-bead loop (implement -> review -> revise), and commit each child on its own stacked jj bookmark or git branch for the owner to review. Never pushes or closes beads; skips beads that need a human decision. Use when the user runs "/beads-workflow:run-epic <epic-id>", asks to run, work through, or process an epic by ID, or approves implementing a specific epic ID that was just discussed (e.g. "yes, run epic bd-3", or "go ahead" right after epic bd-3 was proposed) - never implement an epic inline. Use run-bead instead when the ID is a single bead.
 ---
 
 # Run epic
@@ -40,7 +40,9 @@ commands and rules also live there.
 ## Final report
 
 Short. Do not restate findings. Print:
-- beads ready for review, in stack order, each with `hunk show <branch>`
+- beads ready for review, in stack order, each with its branch and the command
+  to view it (`jj show <branch>` or `git show <branch>`; `hunk show <branch>` if
+  `hunk` is installed)
 - beads that need the owner's decision (`bd human list`), with IDs
 - rounds used per bead (`metadata.rounds`)
 
