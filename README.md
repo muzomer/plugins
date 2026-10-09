@@ -1,4 +1,4 @@
-# agent-skills
+# plugins
 
 Claude Code plugins by [muzomer](https://github.com/muzomer), published as the
 `muzomer` plugin marketplace.
@@ -21,11 +21,11 @@ Pass the same `--scope` to both commands, so the marketplace is registered
 where the plugin is enabled:
 
 ```sh
-claude plugin marketplace add muzomer/agent-skills            # add --scope project|local if needed
-claude plugin install beads-workflow@muzomer                  # same --scope here
+claude plugin marketplace add muzomer/plugins  # add --scope project|local if needed
+claude plugin install beads-workflow@muzomer    # same --scope here
 ```
 
-Inside Claude Code the same works with `/plugin marketplace add muzomer/agent-skills`
+Inside Claude Code the same works with `/plugin marketplace add muzomer/plugins`
 and `/plugin install beads-workflow@muzomer`.
 
 For a project, you can instead commit this to `.claude/settings.json`, so
@@ -34,7 +34,7 @@ teammates are asked to install the plugin when they trust the folder:
 ```json
 {
   "extraKnownMarketplaces": {
-    "muzomer": { "source": { "source": "github", "repo": "muzomer/agent-skills" } }
+    "muzomer": { "source": { "source": "github", "repo": "muzomer/plugins" } }
   },
   "enabledPlugins": { "beads-workflow@muzomer": true }
 }

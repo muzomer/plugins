@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Implement Beads (bd) issues and epics with implementer, reviewer and reviser agents; each bead becomes one reviewed jj or git commit on its own branch",
   "author": { "name": "Muzaffar Omer", "url": "https://github.com/muzomer" },
-  "repository": "https://github.com/muzomer/agent-skills",
+  "repository": "https://github.com/muzomer/plugins",
   "license": "MIT",
   "keywords": ["beads", "jj", "jujutsu", "git", "code-review", "agents"]
 }
