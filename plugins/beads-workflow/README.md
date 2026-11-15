@@ -78,7 +78,11 @@ corresponding command after every change:
 ```
 
 When the section or the matching row is missing, the workflow requests the gate
-command before starting.
+command before starting. Prefer quiet test flags (for example `pytest -q`): the
+workflow reads only the exit code and, on a failure, the last 30 lines.
+
+The skills run the coordinator on Sonnet, because it only routes work; each
+agent keeps its own model.
 
 An optional `## Review checklist` section lists the project's own risks. The
 reviewer checks each item, on top of its generic checks (inputs, error paths,

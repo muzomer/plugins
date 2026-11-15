@@ -1,5 +1,7 @@
 ---
 name: run-bead
+# The coordinator only routes work, so Sonnet is enough; each agent keeps its own model.
+model: sonnet
 description: Run one Beads (`bd`) issue through test-writer, implementer, reviewer and reviser agents (max 3 review rounds), then commit it on its own jj bookmark or git branch for the owner to review. Use when the user runs "/beads-workflow:run-bead <id>", asks to run or implement a bead by ID, or approves implementing a bead just discussed (e.g. "go ahead") - never implement a bead inline. Use run-epic for an epic.
 ---
 
@@ -59,10 +61,13 @@ owner before step 2, and suggest adding the section.
 3. **Implement.** Run `beads-workflow:implementer` with the bead ID, `vcs` and
    the gate command. `BLOCKED: human` -> stop this bead.
 4. **Gate.** Run each gate command yourself as a plain line, never through a
-   shell variable (fish does not split it into words), and check the exit code.
-   Exit 127 means command not found, not a failed gate: fix the command.
+   shell variable (fish does not split it into words), with its output sent
+   to a file: `<command> > /tmp/bd-gate-<id>.log 2>&1`. Test logs are long and
+   would fill your context on every run, so use only the exit code; on a
+   failure, read `tail -n 30 /tmp/bd-gate-<id>.log`. Exit 127 means command
+   not found, not a failed gate: fix the command.
    Record `bd update <id> --set-metadata gate=pass|fail`. On a failure, write
-   `GATE FAILED: <command> exited <code>` plus the error into the bead notes,
+   `GATE FAILED: <command> exited <code>` plus those lines into the bead notes,
    run `beads-workflow:reviser`, and skip the review this round.
 5. **Review loop, max 3 rounds.** Before each review, if `tdd_sum` is set, run
    the same `shasum` command again. A different hash means the frozen tests

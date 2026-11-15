@@ -1,5 +1,7 @@
 ---
 name: run-epic
+# The coordinator only routes work, so Sonnet is enough; each agent keeps its own model.
+model: sonnet
 description: Run every ready child of a Beads (`bd`) epic, in dependency order, through the run-bead loop, each committed on its own stacked jj bookmark or git branch, then run the full test suite. Use when the user runs "/beads-workflow:run-epic <id>", asks to run or work through an epic by ID, or approves implementing an epic just discussed (e.g. "go ahead") - never implement an epic inline. Use run-bead for a single bead.
 ---
 
