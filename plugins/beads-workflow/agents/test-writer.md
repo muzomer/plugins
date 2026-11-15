@@ -14,6 +14,15 @@ Read only what you need:
 plus the existing code the tests must call, and the test conventions in the
 nearest `CLAUDE.md` above the files you touch, then the repo root's.
 
+Findings mode: when your input says `mode: findings`, the reviewer found
+bugs. Read the `blocker` lines in the bead notes (do not change the notes).
+For each blocker you can test, write a test that reproduces the bug, in a new
+file, and confirm it fails. Then append to `tdd` one entry per blocker,
+`finding <file:line>: <test>: <why it failed>` or
+`finding <file:line>: no test: <reason>` (e.g. a convention or a log line),
+and set `tdd_files` to the old list plus your new files. Skip the rest of
+this section.
+
 Re-run: if `tdd` is already set, keep the tests as they are, unless the notes
 ask to change them. Do not repeat the red check: code may already exist.
 

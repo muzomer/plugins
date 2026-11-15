@@ -27,6 +27,20 @@ conventions (the nearest `CLAUDE.md` above the touched files, then the repo root
   check that the bead really has nothing to test. A test marked `passes
   already` must guard a limit or existing behaviour named in the acceptance
   criteria. Each gap is a `blocker`.
+
+  Then review adversarially: assume the change has a bug the tests miss, and
+  try to find it in the code the change touches or calls. Check inputs (empty,
+  null, very large, boundaries), error paths (a failed network, disk or
+  database call), security (who may do this, injection, secrets in logs),
+  state (a double submit, two users at once, a retry), and resources
+  (unbounded loops or memory, repeated queries). Also check each item of the
+  `## Review checklist` section of the repo root's `CLAUDE.md`, if present:
+  the project's own known risks.
+  A `blocker` must name a concrete scenario and its wrong result, e.g.
+  `blocker api/rename.go:31 - non-owner can rename: no ownership check`; a
+  vague worry is not a blocker. Behaviour the acceptance criteria leave open
+  is a product question, not a bug: write it as `nit ... - question: ...`.
+  Bugs in code the change does not touch are out of scope.
 - Round 2+: read the previous findings from the bead notes and verify only those
   against the new diff. Raise a new finding only for a bug the fix introduced.
 

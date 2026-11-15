@@ -9,7 +9,7 @@ owner remains the approver: the workflow never pushes and never closes a bead.
 | Skill     | `/beads-workflow:run-epic <id>` | Runs every ready child of an epic, in dependency order         |
 | Agent     | `beads-workflow:test-writer`    | Writes failing tests for the acceptance criteria, before code  |
 | Agent     | `beads-workflow:implementer`    | Implements the change, without committing                      |
-| Agent     | `beads-workflow:reviewer`       | Reviews the change against the acceptance criteria (read-only) |
+| Agent     | `beads-workflow:reviewer`       | Checks the acceptance criteria, then tries to break the change |
 | Agent     | `beads-workflow:reviser`        | Resolves the blocker findings raised by the reviewer           |
 | Agent     | `beads-workflow:diagnoser`      | Explains why a bead broke the full suite (read-only)           |
 
@@ -53,6 +53,11 @@ into a test and confirms it fails before any code exists; it skips beads with
 nothing to test. Its test files are then frozen: the workflow records their
 checksum and stops the bead if the implementer or reviser changes them.
 
+In round 1, the reviewer also reviews adversarially: it looks for bugs the
+tests miss, and each blocker must name a concrete failing scenario. Before the
+reviser fixes a blocker, the test-writer adds a failing test that reproduces
+it, so every fix is proven by a test written by another agent.
+
 The project's root `CLAUDE.md` requires a `## Quality gates` section. The
 workflow selects the row matching the area a bead touches and runs the
 corresponding command after every change:
@@ -68,6 +73,18 @@ corresponding command after every change:
 
 When the section or the matching row is missing, the workflow requests the gate
 command before starting.
+
+An optional `## Review checklist` section lists the project's own risks. The
+reviewer checks each item, on top of its generic checks (inputs, error paths,
+security, state, resources). Add an item whenever a bug reaches review that a
+check would have caught:
+
+```markdown
+## Review checklist
+
+- Every endpoint checks that the user belongs to the project's organisation.
+- API responses stay backwards compatible: add fields, never rename or remove.
+```
 
 ## Data recorded on beads
 

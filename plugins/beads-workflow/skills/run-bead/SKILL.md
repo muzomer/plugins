@@ -74,7 +74,12 @@ owner before step 2, and suggest adding the section.
    `bd show <id> --json | jq -r '.[0].metadata.verdict // empty'`; if empty,
    use the `VERDICT:` line of its return.
    - `CLEAN` -> step 6.
-   - `ISSUES` -> run `beads-workflow:reviser` (bead ID, `vcs`, gate command), run the gate, review again.
+   - `ISSUES` -> run `beads-workflow:test-writer` with `mode: findings` (bead
+     ID, `vcs`, gate command), so each testable blocker gets a failing test
+     from an agent that did not write the code. `BLOCKED: human` -> stop this
+     bead. Freeze again: the step 2 `shasum` over the new `tdd_files`, record
+     `tdd_sum`. Then run `beads-workflow:reviser` (bead ID, `vcs`, gate
+     command), run the gate, review again.
    - Still `ISSUES` after round 3, or no verdict anywhere: flag `human`, stop this bead.
 6. **Commit.** Run `status`: every changed file must belong to this bead;
    anything else (another session, a leftover agent) -> stop and ask the owner.
