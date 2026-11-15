@@ -53,11 +53,29 @@ whole stack:
    line `FULL SUITE FAILED: <command> exited <code>` plus the last lines of the
    error for the epic note (see "Final report"). Do not run the reviser: the
    cause can be in any bead of the stack, so the owner decides the fix.
+5. On a failure, find the bead that caused it, so the owner does not have to.
+   Use the operations of the run-bead **Version control** table. First run
+   `status`: if the working copy is not clean, skip this step and say so in
+   the report, because moving between commits could lose changes. Then, for
+   each failing command, stop at the first result:
+   1. Run it again where you are. It passes: the result is `flaky`.
+   2. `checkout` the `parent` of the first bead committed in this run (the
+      base) and run it there. It fails: the result is `pre-existing`. This
+      check is required: bisect assumes the base is good, so on a broken base
+      it would wrongly blame the first bead.
+   3. `bisect` with the base as `<good>` and the top bead's branch as `<bad>`.
+      The first bad commit is one bead's commit: match it to the bead whose
+      `metadata.bookmark` points to it. The result is that bead ID.
+
+   Then `return` to the top of the stack. Record the result with
+   `bd update <epic> --set-metadata full_suite_culprit=<bead-id|pre-existing|flaky>`
+   and add it to the failure line: `FULL SUITE FAILED: <command> exited <code>; caused by <result>`.
 
 ## Final report
 
 Short. Do not restate findings. Print:
 - the full suite result first, when it ran; on a failure, the failing command
+  and its cause (bead ID and branch, `pre-existing`, or `flaky`)
 - beads ready for review, in stack order, each with its branch and the command
   to view it (`jj show <branch>` or `git show <branch>`; `hunk show <branch>` if
   `hunk` is installed)

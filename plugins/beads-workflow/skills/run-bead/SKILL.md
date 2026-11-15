@@ -28,6 +28,10 @@ The steps below name a row of this table, never a raw command:
 | branch | `jj bookmark create <branch>` | nothing: `commit` already made it |
 | next | `jj new` | nothing: HEAD is already on the new branch |
 | change id | `jj log -r @- --no-graph -T 'change_id.short()'` | `git rev-parse --short HEAD` |
+| parent | `<rev>-` | `<rev>~1` |
+| checkout | `jj new <rev>` | `git switch --detach <rev>` |
+| return | `jj new <top branch>` | `git switch <top branch>` |
+| bisect | `jj bisect run --range '<good>..<bad>' -- bash -c '<command>'` | `git bisect start <bad> <good>`, `git bisect run bash -c '<command>'`, `git bisect reset` |
 
 In git, each bead's branch starts from the previous bead's branch, so the
 branches form the same stack as jj bookmarks. If `git switch -c` fails because

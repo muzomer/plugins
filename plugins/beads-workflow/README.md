@@ -18,8 +18,9 @@ on a dedicated branch named `type-short-summary`, stacked on the previous bead.
 After the last bead of an epic, `run-epic` runs every gate command of the
 project once on top of the stack, to catch breakage between areas that the
 per-bead gates miss. A failure is reported to the owner and is not fixed
-automatically. The suite does not run before the first bead, so a failure that
-already existed in the base is reported the same way.
+automatically. The report names the cause: the bead that introduced the failure
+(found with `jj bisect` or `git bisect`), a failure that already existed before
+the epic, or a flaky test.
 
 ## Installation
 
@@ -33,7 +34,8 @@ claude plugin install beads-workflow@muzomer    # use the same --scope value
 - [`bd`](https://github.com/gastownhall/beads), written against version 1.2.2;
   `bd update --claim` and `--set-metadata` are required
 - `jq`
-- `jj` or `git`
+- `jj` or `git`; with jj, a version that has `jj bisect run` (tested with 0.41)
+- `bash`, used to run gate commands during bisect
 - `hunk` (optional): when installed, the final report suggests `hunk show <branch>`
 
 ## Project setup
@@ -67,6 +69,7 @@ command before starting.
 | Metadata | `verdict`, `review_round`      | Result and round number of the last review                           |
 | Metadata | `bookmark`, `change`, `rounds` | Branch name (jj or git), change or commit ID, and review rounds used |
 | Metadata | `full_suite` (epic only)       | Result of the full suite after the last bead: `pass` or `fail`       |
+| Metadata | `full_suite_culprit` (epic)    | Cause of a failure: a bead ID, `pre-existing`, or `flaky`            |
 
 To answer a bead labelled `human`, record the answer with
 `bd update <id> --notes "..."`, remove the label with
