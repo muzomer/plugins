@@ -14,6 +14,8 @@ owner remains the approver: the workflow never pushes and never closes a bead.
 Each bead follows the same sequence: implementation, quality gate, review,
 revision (at most three rounds), and a commit with a Conventional Commit message
 on a dedicated branch named `type-short-summary`, stacked on the previous bead.
+`run-bead` owns these per-bead steps and `run-epic` reuses them, so a change
+to `run-bead` changes both.
 
 After the last bead of an epic, `run-epic` runs every gate command of the
 project once on top of the stack, to catch breakage between areas that the
@@ -69,7 +71,7 @@ command before starting.
 | Metadata | `verdict`, `review_round`      | Result and round number of the last review                           |
 | Metadata | `bookmark`, `change`, `rounds` | Branch name (jj or git), change or commit ID, and review rounds used |
 | Metadata | `full_suite` (epic only)       | Result of the full suite after the last bead: `pass` or `fail`       |
-| Metadata | `full_suite_culprit` (epic)    | Cause of a failure: a bead ID, `pre-existing`, or `flaky`            |
+| Metadata | `full_suite_culprit` (epic)    | Cause of a failure: a bead ID, `pre-existing`, `flaky`, or `unknown` |
 
 To answer a bead labelled `human`, record the answer with
 `bd update <id> --notes "..."`, remove the label with

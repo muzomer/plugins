@@ -1,13 +1,14 @@
 ---
 name: run-epic
-description: Implement every ready child of a Beads (`bd`) epic in dependency order, each through the run-bead loop (implement -> review -> revise), and commit each child on its own stacked jj bookmark or git branch for the owner to review. Never pushes or closes beads; skips beads that need a human decision. Use when the user runs "/beads-workflow:run-epic <epic-id>", asks to run, work through, or process an epic by ID, or approves implementing a specific epic ID that was just discussed (e.g. "yes, run epic bd-3", or "go ahead" right after epic bd-3 was proposed) - never implement an epic inline. Use run-bead instead when the ID is a single bead.
+description: Run every ready child of a Beads (`bd`) epic, in dependency order, through the run-bead loop, each committed on its own stacked jj bookmark or git branch, then run the full test suite. Use when the user runs "/beads-workflow:run-epic <id>", asks to run or work through an epic by ID, or approves implementing an epic just discussed (e.g. "go ahead") - never implement an epic inline. Use run-bead for a single bead.
 ---
 
 # Run epic
 
-Input: an epic bead ID. You are a thin coordinator. Agents do the work; you pass
-bead IDs and read only their short returns and `VERDICT:` lines. Never read a diff
-yourself. Never push.
+Input: an epic bead ID. Read `${CLAUDE_PLUGIN_ROOT}/skills/run-bead/SKILL.md`
+once per run: its **Version control** (detect once per epic), **Gate
+commands**, **Steps** and **Rules** apply here. Skip its "Before you start" and
+"Final report": the query below does those checks, and the report is below.
 
 ## Per child bead
 
@@ -23,64 +24,45 @@ bd list --parent <epic> --status=all --json | jq -r '
   | .id'
 ```
 
-Not `bd ready`: it treats a blocker as open until it is closed, but a finished
-bead stays open with `needs-review` until the owner approves, so a chain of
-dependent beads would stop after the first. A `needs-review` blocker counts as
-done because its commit is already in the stack below. The query also skips
-`human` beads and anything that depends on them. Take the first id; stop when
-it prints nothing.
-
-Run that bead with the **Version control** section (detect once per epic) and
-the **Steps** of the `run-bead` skill (read
-`${CLAUDE_PLUGIN_ROOT}/skills/run-bead/SKILL.md` once per run). Skip its "Before you start" and "Final report" sections: the query
-above already does those checks, and the report is the one below. When a step
-says "stop this bead", move on to the next bead. The `human` answers, gate
-commands and rules also live there.
+Not `bd ready`: it keeps a blocker open until it is closed, but a finished bead
+stays open with `needs-review`, so a dependent chain would stop after one bead.
+The query also skips `human` beads and their dependents. Run the first id
+through the run-bead Steps; "stop this bead" means go to the next. Stop when
+the query prints nothing.
 
 ## After the last bead: full suite
 
-Each bead runs only the gate row for the area it touches, so a change in one
-area can break another area unnoticed. Once the query prints nothing, check the
-whole stack:
+Each bead runs only its area's gate, so one area can break another unnoticed.
+Skip this section if no bead was committed in this run.
 
-1. Skip this section if no bead was committed in this run: nothing new to check.
-2. Read every row of the project's `## Quality gates` section and run each
-   distinct command once, on top of the stack. Run each command as a plain line
-   and check its exit code, as in the run-bead **Gate** step. Exit 127 means
-   the command was not found: fix the command, do not count it as a failure.
-3. All pass: `bd update <epic> --set-metadata full_suite=pass`.
-4. Any fails: `bd update <epic> --set-metadata full_suite=fail`, and keep the
-   line `FULL SUITE FAILED: <command> exited <code>` plus the last lines of the
-   error for the epic note (see "Final report"). Do not run the reviser: the
-   cause can be in any bead of the stack, so the owner decides the fix.
-5. On a failure, find the bead that caused it, so the owner does not have to.
-   Use the operations of the run-bead **Version control** table. First run
-   `status`: if the working copy is not clean, skip this step and say so in
-   the report, because moving between commits could lose changes. Then, for
-   each failing command, stop at the first result:
-   1. Run it again where you are. It passes: the result is `flaky`.
+1. Run each distinct command of the `## Quality gates` section once, on top of
+   the stack, with the rules of the run-bead **Gate** step.
+2. All pass: `bd update <epic> --set-metadata full_suite=pass`. Done.
+3. A command fails: find the cause. Run `status` first: if the working copy is
+   not clean, skip the search (moving between commits could lose changes) and
+   use cause `unknown`. Otherwise stop at the first match:
+   1. Run it again where you are. It passes: `flaky`.
    2. `checkout` the `parent` of the first bead committed in this run (the
-      base) and run it there. It fails: the result is `pre-existing`. This
-      check is required: bisect assumes the base is good, so on a broken base
-      it would wrongly blame the first bead.
+      base) and run it. It fails: `pre-existing`. Required, because bisect
+      assumes the base is good and would wrongly blame the first bead.
    3. `bisect` with the base as `<good>` and the top bead's branch as `<bad>`.
-      The first bad commit is one bead's commit: match it to the bead whose
-      `metadata.bookmark` points to it. The result is that bead ID.
+      The first bad commit maps to the bead whose `metadata.bookmark` points
+      to it: that bead ID.
 
-   Then `return` to the top of the stack. Record the result with
-   `bd update <epic> --set-metadata full_suite_culprit=<bead-id|pre-existing|flaky>`
-   and add it to the failure line: `FULL SUITE FAILED: <command> exited <code>; caused by <result>`.
+   Then `checkout` the top branch. Record
+   `bd update <epic> --set-metadata full_suite=fail --set-metadata full_suite_culprit=<cause>`
+   and keep `FULL SUITE FAILED: <command> exited <code>; caused by <cause>`
+   plus the last lines of the error for the epic note. Do not run the reviser:
+   the owner decides the fix.
 
 ## Final report
 
 Short. Do not restate findings. Print:
-- the full suite result first, when it ran; on a failure, the failing command
-  and its cause (bead ID and branch, `pre-existing`, or `flaky`)
-- beads ready for review, in stack order, each with its branch and the command
-  to view it (`jj show <branch>` or `git show <branch>`; `hunk show <branch>` if
-  `hunk` is installed)
+- first, the full suite result; on a failure, the command and its cause
+- beads ready for review, in stack order, each with its branch and view
+  command (as in the run-bead final report)
 - beads that need the owner's decision (`bd human list`), with IDs
-- rounds used per bead (`metadata.rounds`)
+- `metadata.rounds` per bead
 
-Also write one note on the epic: the full suite failure line (if any), order,
+Write one note on the epic: the full suite failure line (if any), order,
 branches, rounds.
