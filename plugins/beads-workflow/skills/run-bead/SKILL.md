@@ -83,7 +83,9 @@ owner before step 2, and suggest adding the section.
    `bd show <id> --json | jq -r '.[0].metadata.verdict // empty'`; if empty,
    use the `VERDICT:` line of its return.
    - `CLEAN` -> step 6.
-   - `ISSUES` -> run `beads-workflow:test-writer` with `mode: findings` (bead
+   - `ISSUES` with a blocker marked `needs owner` in the notes -> flag `human`,
+     stop this bead. No agent can fix it, so the fix loop would only cost runs.
+   - Other `ISSUES` -> run `beads-workflow:test-writer` with `mode: findings` (bead
      ID, `vcs`, gate command), so each testable blocker gets a failing test
      from an agent that did not write the code. `BLOCKED: human` -> stop this
      bead. Freeze again: the step 2 `shasum` over the new `tdd_files`, record

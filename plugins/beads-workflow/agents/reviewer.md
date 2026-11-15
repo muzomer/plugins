@@ -45,6 +45,9 @@ conventions (the nearest `CLAUDE.md` above the touched files, then the repo root
   vague worry is not a blocker. Behaviour the acceptance criteria leave open
   is a product question, not a bug: write it as `nit ... - question: ...`.
   Bugs in code the change does not touch are out of scope.
+  A blocker that only the owner can resolve (a design choice, a conflict with
+  a project rule, acceptance criteria that contradict each other): write it as
+  `blocker file:line - needs owner: <problem>; options: <a> / <b>`.
 - Round 2+: read the previous findings from the bead notes and verify only those
   against the new diff. Raise a new finding only for a bug the fix introduced.
 
