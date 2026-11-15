@@ -28,6 +28,8 @@ never a raw command:
 | parent | `<rev>-` | `<rev>~1` |
 | checkout | `jj new <rev>` | `git switch --detach <rev>`; to go back to a branch tip, drop `--detach` |
 | bisect | `jj bisect run --range '<good>..<bad>' -- bash -c '<command>'` | `git bisect start <bad> <good>`, `git bisect run bash -c '<command>'`, `git bisect reset` |
+| park | `jj describe -m "wip(<id>): parked"`, note the ref `jj log -r @ --no-graph -T 'change_id.short()'`, then `jj new @-` | `git stash push -u -m "wip <id>"`; the ref is `wip <id>` |
+| unpark | `jj squash --from <ref> --into @` | `git stash list` to find the entry `wip <id>`, then `git stash pop stash@{<n>}` |
 
 In git, each bead's branch starts from the previous bead's branch, so the
 branches stack like jj bookmarks. If `git switch -c` fails because the branch
@@ -50,7 +52,9 @@ owner before step 2, and suggest adding the section.
 
 ## Steps
 
-1. **Pre-flight.** `bd show <id> --json | jq '.[0] | {title, acceptance_criteria, design}'`.
+1. **Pre-flight.** `bd show <id> --json | jq '.[0] | {title, acceptance_criteria, design, parked: .metadata.parked}'`.
+   `parked` set (a re-run): `unpark` it so the earlier work and tests come
+   back, then `bd update <id> --unset-metadata parked`.
    No acceptance criteria, or clearly more than one small change: write the
    question in the notes, `bd label add <id> human`, stop this bead.
 2. **Write tests.** Run `beads-workflow:test-writer` with the bead ID, `vcs`
@@ -101,6 +105,12 @@ owner before step 2, and suggest adding the section.
    `bd label add <id> needs-review` and
    `bd update <id> --set-metadata bookmark=<branch> --set-metadata change=<change id> --set-metadata rounds=<n>`
    (key `bookmark` in git too). Leave the bead open.
+
+**Stopping a bead.** Whenever a step says "stop this bead", run `status`
+first. If agents changed files, `park` them and record
+`bd update <id> --set-metadata parked=<ref>`. Partial work left in the
+working copy would leak into the next bead's commit, the full suite and the
+epic review; parked, it waits for the re-run.
 
 An agent that stops at its turn limit returns partial output with an agent ID:
 resume it once; if it still does not finish, flag `human`.
