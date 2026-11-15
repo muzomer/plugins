@@ -19,6 +19,7 @@ Pick the next bead with this query, and re-run it after every bead:
 ```bash
 bd list --parent <epic> --status=all --json | jq -r '
   (map({key: .id, value: ((.status == "closed") or ((.labels // []) | index("needs-review") != null))}) | from_entries) as $done
+  | sort_by(.created_at, .id)
   | .[]
   | select(.status != "closed")
   | select((.labels // []) | (index("human") or index("needs-review")) | not)
@@ -28,7 +29,9 @@ bd list --parent <epic> --status=all --json | jq -r '
 
 Not `bd ready`: it keeps a blocker open until it is closed, but a finished bead
 stays open with `needs-review`, so a dependent chain would stop after one bead.
-The query also skips `human` beads and their dependents. Run the first id
+The query also skips `human` beads and their dependents, and lists the oldest
+bead first: `bd list` returns the newest first, which would run unrelated
+beads in reverse of the order they were planned. Run the first id
 through the run-bead Steps; "stop this bead" means go to the next. Stop when
 the query prints nothing.
 
