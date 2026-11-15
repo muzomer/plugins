@@ -12,6 +12,7 @@ owner remains the approver: the workflow never pushes and never closes a bead.
 | Agent     | `beads-workflow:reviewer`       | Checks the acceptance criteria, then tries to break the change |
 | Agent     | `beads-workflow:reviser`        | Resolves the blocker findings raised by the reviewer           |
 | Agent     | `beads-workflow:diagnoser`      | Explains why a bead broke the full suite (read-only)           |
+| Agent     | `beads-workflow:epic-reviewer`  | Reviews all beads of an epic together (read-only)              |
 
 Each bead follows the same sequence: failing tests, implementation, quality
 gate, review, revision (at most three rounds), and a commit with a Conventional
@@ -27,6 +28,11 @@ automatically. The report names the cause: the bead that introduced the failure
 (found with `jj bisect` or `git bisect`), a failure that already existed before
 the epic, or a flaky test. When a bead is the cause, the read-only diagnoser
 explains the likely reason and suggests fixes.
+
+When the full suite passes, the read-only epic reviewer reads all beads of the
+run together and reports problems between beads that per-bead reviews miss: a
+missing piece, drift from the epic's design, inconsistency, duplication, and
+leftovers. Its findings go to the owner and are not fixed automatically.
 
 ## Installation
 

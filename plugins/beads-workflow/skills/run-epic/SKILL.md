@@ -37,7 +37,8 @@ Skip this section if no bead was committed in this run.
 
 1. Run each distinct command of the `## Quality gates` section once, on top of
    the stack, with the rules of the run-bead **Gate** step.
-2. All pass: `bd update <epic> --set-metadata full_suite=pass`. Done.
+2. All pass: `bd update <epic> --set-metadata full_suite=pass`, then go to
+   "Epic review".
 3. A command fails: find the cause. Run `status` first: if the working copy is
    not clean, skip the search (moving between commits could lose changes) and
    use cause `unknown`. Otherwise stop at the first match:
@@ -56,18 +57,30 @@ Skip this section if no bead was committed in this run.
    the owner decides the fix.
 4. The cause is a bead ID: run `beads-workflow:diagnoser` with that bead ID,
    its branch, `vcs`, the failing command and the error lines, then stop it
-   (`TaskStop`). Its return (at most 5 lines) is the one agent output you copy:
+   (`TaskStop`). Its return (at most 5 lines) is an agent output you copy:
    keep it for the epic note and the report, labelled "likely cause".
+
+## Epic review
+
+Each bead was reviewed on its own, so problems between beads (a missing
+piece, drift from the design, duplication) can slip through. Run this only
+when the full suite passed: on a failure, that comes first.
+
+Run `beads-workflow:epic-reviewer` with the epic ID, `vcs`, the base (the
+`parent` of the first bead committed in this run) and the top branch, then
+stop it (`TaskStop`). Its return (at most 10 lines) is the other agent output
+you copy: keep it for the epic note and the report. Do not fix anything and
+do not run the reviser: fixes often span beads, so the owner decides.
 
 ## Final report
 
 Short. Do not restate findings. Print:
 - first, the full suite result; on a failure, the command, its cause, and the
-  diagnosis (if any)
+  diagnosis (if any); on a pass, the epic review lines
 - beads ready for review, in stack order, each with its branch, view command
   and assumptions (as in the run-bead final report)
 - beads that need the owner's decision (`bd human list`), with IDs
 - `metadata.rounds` per bead
 
-Write one note on the epic: the full suite failure line and diagnosis (if
-any), order, branches, rounds.
+Write one note on the epic: the full suite failure line and diagnosis, or
+the epic review lines; then order, branches, rounds.
