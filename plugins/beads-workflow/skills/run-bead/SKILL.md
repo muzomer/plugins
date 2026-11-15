@@ -1,6 +1,6 @@
 ---
 name: run-bead
-description: Run one Beads (`bd`) issue through implementer, reviewer and reviser agents (max 3 review rounds), then commit it on its own jj bookmark or git branch for the owner to review. Use when the user runs "/beads-workflow:run-bead <id>", asks to run or implement a bead by ID, or approves implementing a bead just discussed (e.g. "go ahead") - never implement a bead inline. Use run-epic for an epic.
+description: Run one Beads (`bd`) issue through test-writer, implementer, reviewer and reviser agents (max 3 review rounds), then commit it on its own jj bookmark or git branch for the owner to review. Use when the user runs "/beads-workflow:run-bead <id>", asks to run or implement a bead by ID, or approves implementing a bead just discussed (e.g. "go ahead") - never implement a bead inline. Use run-epic for an epic.
 ---
 
 # Run bead
@@ -51,23 +51,32 @@ owner before step 2, and suggest adding the section.
 1. **Pre-flight.** `bd show <id> --json | jq '.[0] | {title, acceptance_criteria, design}'`.
    No acceptance criteria, or clearly more than one small change: write the
    question in the notes, `bd label add <id> human`, stop this bead.
-2. **Implement.** Run `beads-workflow:implementer` with the bead ID, `vcs` and
+2. **Write tests.** Run `beads-workflow:test-writer` with the bead ID, `vcs`
+   and the gate command. `BLOCKED: human` -> stop this bead. `SKIP` -> step 3.
+   `DONE` -> freeze the tests: read `.[0].metadata.tdd_files` from `bd show`,
+   run `shasum <files> | shasum` with the paths written out, and record the
+   hash with `bd update <id> --set-metadata tdd_sum=<hash>`.
+3. **Implement.** Run `beads-workflow:implementer` with the bead ID, `vcs` and
    the gate command. `BLOCKED: human` -> stop this bead.
-3. **Gate.** Run each gate command yourself as a plain line, never through a
+4. **Gate.** Run each gate command yourself as a plain line, never through a
    shell variable (fish does not split it into words), and check the exit code.
    Exit 127 means command not found, not a failed gate: fix the command.
    Record `bd update <id> --set-metadata gate=pass|fail`. On a failure, write
    `GATE FAILED: <command> exited <code>` plus the error into the bead notes,
    run `beads-workflow:reviser`, and skip the review this round.
-4. **Review loop, max 3 rounds.** Before each review, `bd update <id> --unset-metadata verdict`
-   so an old verdict cannot be read as new. Run `beads-workflow:reviewer`
+5. **Review loop, max 3 rounds.** Before each review, if `tdd_sum` is set, run
+   the same `shasum` command again. A different hash means the frozen tests
+   were changed: write `blocker - test files changed after test-writer` in the
+   notes, flag `human`, stop this bead (the originals cannot be restored, so
+   the owner decides). Then `bd update <id> --unset-metadata verdict` so an old
+   verdict cannot be read as new. Run `beads-workflow:reviewer`
    (bead ID, round number, `vcs`), then read
    `bd show <id> --json | jq -r '.[0].metadata.verdict // empty'`; if empty,
    use the `VERDICT:` line of its return.
-   - `CLEAN` -> step 5.
+   - `CLEAN` -> step 6.
    - `ISSUES` -> run `beads-workflow:reviser` (bead ID, `vcs`, gate command), run the gate, review again.
    - Still `ISSUES` after round 3, or no verdict anywhere: flag `human`, stop this bead.
-5. **Commit.** Run `status`: every changed file must belong to this bead;
+6. **Commit.** Run `status`: every changed file must belong to this bead;
    anything else (another session, a leftover agent) -> stop and ask the owner.
    Run `commit` with a Conventional Commit message (`type(scope): summary`) plus
    the session's attribution trailers, branch name `<type-short-summary>`; then
@@ -83,7 +92,8 @@ resume it once; if it still does not finish, flag `human`.
 
 Short. Do not restate findings. Print one of:
 - ready for review: the branch, the command to view it (`jj show <branch>` or
-  `git show <branch>`), and `metadata.rounds`
+  `git show <branch>`), `metadata.rounds`, and each `assumption:` from
+  `metadata.tdd` (the frozen tests encode them, so the owner must see them)
 - needs the owner's decision: the bead ID and the question from its notes
 - not started: the failed check from "Before you start"
 

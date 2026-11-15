@@ -12,6 +12,9 @@ Read only the findings:
 `bd show <id> --json | jq -r '.[0].notes // empty'`
 
 Rules:
+- Never edit the files in `.[0].metadata.tdd_files` and never set the `tdd`,
+  `tdd_files` or `tdd_sum` metadata. A finding that needs a test change: treat
+  it as a design decision (see the last rule).
 - Fix every `blocker`. Fix a `nit` only if it is trivial and safe.
 - If you disagree with a finding, do not change the code; say why in your reply.
 - Reply with `bd update <id> --notes "..."` replacing the findings. One line per

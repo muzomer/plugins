@@ -16,12 +16,17 @@ Bash is for these commands only: `bd show`, `bd update <id> --notes`,
   implementer created are missing from the review.
 
 Read only what you need:
-`bd show <id> --json | jq '.[0] | {title, acceptance_criteria}'` and the diff (this change only).
+`bd show <id> --json | jq '.[0] | {title, acceptance_criteria, tdd: .metadata.tdd, tdd_files: .metadata.tdd_files}'` and the diff (this change only).
 
 Check only: correctness against the acceptance criteria, security, and project
 conventions (the nearest `CLAUDE.md` above the touched files, then the repo root's). Style is the linter's job; skip it.
 
-- Round 1: review the full diff.
+- Round 1: review the full diff. Also check the tests: unless `tdd` starts
+  with `skip:`, every acceptance criterion must be covered by a test in
+  `tdd_files`, testing behaviour rather than internals. If `tdd` is a skip,
+  check that the bead really has nothing to test. A test marked `passes
+  already` must guard a limit or existing behaviour named in the acceptance
+  criteria. Each gap is a `blocker`.
 - Round 2+: read the previous findings from the bead notes and verify only those
   against the new diff. Raise a new finding only for a bug the fix introduced.
 

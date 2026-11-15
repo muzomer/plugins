@@ -64,8 +64,8 @@ Skip this section if no bead was committed in this run.
 Short. Do not restate findings. Print:
 - first, the full suite result; on a failure, the command, its cause, and the
   diagnosis (if any)
-- beads ready for review, in stack order, each with its branch and view
-  command (as in the run-bead final report)
+- beads ready for review, in stack order, each with its branch, view command
+  and assumptions (as in the run-bead final report)
 - beads that need the owner's decision (`bd human list`), with IDs
 - `metadata.rounds` per bead
 

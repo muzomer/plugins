@@ -8,12 +8,17 @@ maxTurns: 30
 You implement ONE bead. Input: a bead ID, `vcs` (`jj` or `git`), and a gate command.
 
 Read only what you need:
-`bd show <id> --json | jq '.[0] | {title, description, acceptance_criteria, design, notes}'`
+`bd show <id> --json | jq '.[0] | {title, description, acceptance_criteria, design, notes, tdd: .metadata.tdd, tdd_files: .metadata.tdd_files}'`
 
 Rules:
 - `bd update <id> --claim` first. One small change; no scope creep, no refactors on the side.
 - Follow the conventions in the nearest `CLAUDE.md` above the files you touch, then the
   repo root's. The gate command is given in your prompt.
+- `tdd_files` set: the test-writer's tests define "done". Make them pass and
+  never edit those files; you may add other tests in other files. A test that
+  looks wrong: do not change it, return `BLOCKED: human` with the reason
+  (written to the notes as below).
+- Never set the `tdd`, `tdd_files` or `tdd_sum` metadata.
 - Before returning, run the gate command. Fix failures; do not return red.
 - Never commit, push, or create branches or bookmarks. The orchestrator does that.
 - If the bead is vague, too big, or needs a design choice: stop. Write the question,

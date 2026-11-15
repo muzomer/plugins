@@ -7,14 +7,16 @@ owner remains the approver: the workflow never pushes and never closes a bead.
 | --------- | ------------------------------- | -------------------------------------------------------------- |
 | Skill     | `/beads-workflow:run-bead <id>` | Runs a single bead                                             |
 | Skill     | `/beads-workflow:run-epic <id>` | Runs every ready child of an epic, in dependency order         |
+| Agent     | `beads-workflow:test-writer`    | Writes failing tests for the acceptance criteria, before code  |
 | Agent     | `beads-workflow:implementer`    | Implements the change, without committing                      |
 | Agent     | `beads-workflow:reviewer`       | Reviews the change against the acceptance criteria (read-only) |
 | Agent     | `beads-workflow:reviser`        | Resolves the blocker findings raised by the reviewer           |
 | Agent     | `beads-workflow:diagnoser`      | Explains why a bead broke the full suite (read-only)           |
 
-Each bead follows the same sequence: implementation, quality gate, review,
-revision (at most three rounds), and a commit with a Conventional Commit message
-on a dedicated branch named `type-short-summary`, stacked on the previous bead.
+Each bead follows the same sequence: failing tests, implementation, quality
+gate, review, revision (at most three rounds), and a commit with a Conventional
+Commit message on a dedicated branch named `type-short-summary`, stacked on the
+previous bead.
 `run-bead` owns these per-bead steps and `run-epic` reuses them, so a change
 to `run-bead` changes both.
 
@@ -46,6 +48,11 @@ claude plugin install beads-workflow@muzomer    # use the same --scope value
 Every bead requires **acceptance criteria**. Beads without acceptance criteria
 are flagged for a human decision instead of being implemented.
 
+Beads are built test-first. The test-writer turns each acceptance criterion
+into a test and confirms it fails before any code exists; it skips beads with
+nothing to test. Its test files are then frozen: the workflow records their
+checksum and stops the bead if the implementer or reviser changes them.
+
 The project's root `CLAUDE.md` requires a `## Quality gates` section. The
 workflow selects the row matching the area a bead touches and runs the
 corresponding command after every change:
@@ -71,6 +78,8 @@ command before starting.
 | Metadata | `gate`                         | Result of the last gate run: `pass` or `fail`                        |
 | Metadata | `verdict`, `review_round`      | Result and round number of the last review                           |
 | Metadata | `bookmark`, `change`, `rounds` | Branch name (jj or git), change or commit ID, and review rounds used |
+| Metadata | `tdd`                          | Each test and why it failed before the code, or `skip: <reason>`     |
+| Metadata | `tdd_files`, `tdd_sum`         | The frozen test files and their checksum                             |
 | Metadata | `full_suite` (epic only)       | Result of the full suite after the last bead: `pass` or `fail`       |
 | Metadata | `full_suite_culprit` (epic)    | Cause of a failure: a bead ID, `pre-existing`, `flaky`, or `unknown` |
 
