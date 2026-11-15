@@ -34,8 +34,13 @@ Rules:
   the files are frozen after you return, so the implementer cannot edit them.
 - Run only your tests, using the project's test runner from the gate command.
   A test of new behaviour must fail because the behaviour is missing: a failed
-  assertion, or a missing function or endpoint (a compile error counts). A
-  typo, a broken import or broken setup does not count: fix it and run again.
+  assertion, or the code under test not existing yet. In that second case, let
+  the tests fail the way the language reports it (a compile error, a missing
+  symbol, a failed import), even if that stops all tests at once. Do not add
+  stubs, shims, wrappers or placeholder implementations of the code under test
+  to make tests fail one by one: they stay in the repo as leftovers. Test
+  doubles for external dependencies are fine. A typo, a wrong path to existing
+  code, or broken setup is not a valid red: fix it and run again.
 - A test that guards a limit or existing behaviour named in the acceptance
   criteria (e.g. "exactly 366 days is accepted") may pass already: it must
   stay green after the code. Mark it `passes already: <what it guards>`. At
