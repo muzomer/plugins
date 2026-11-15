@@ -107,6 +107,7 @@ check would have caught:
 | Metadata | `bookmark`, `change`, `rounds` | Branch name (jj or git), change or commit ID, and review rounds used |
 | Metadata | `tdd`                          | Each test and why it failed before the code, or `skip: <reason>`     |
 | Metadata | `tdd_files`, `tdd_sum`         | The frozen test files and their checksum                             |
+| Metadata | `frozen_changed`               | Earlier beads whose frozen tests this bead changed                   |
 | Metadata | `full_suite` (epic only)       | Result of the full suite after the last bead: `pass` or `fail`       |
 | Metadata | `full_suite_culprit` (epic)    | Cause of a failure: a bead ID, `pre-existing`, `flaky`, or `unknown` |
 

@@ -88,6 +88,13 @@ owner before step 2, and suggest adding the section.
    - Still `ISSUES` after round 3, or no verdict anywhere: flag `human`, stop this bead.
 6. **Commit.** Run `status`: every changed file must belong to this bead;
    anything else (another session, a leftover agent) -> stop and ask the owner.
+   Then check earlier beads' frozen tests: for each bead with `needs-review`
+   and a `tdd_sum` (`bd list --label needs-review --json`), run the step 2
+   `shasum` over its `tdd_files`. A different hash (or a missing file) means
+   this bead changed them. Do not block: a change of shape can require it,
+   and the reviewer has checked it. Record
+   `bd update <id> --set-metadata frozen_changed="<bead-id> ..."`, store the
+   new hash as that bead's `tdd_sum`, and name it in the report.
    Run `commit` with a Conventional Commit message (`type(scope): summary`) plus
    the session's attribution trailers, branch name `<type-short-summary>`; then
    `branch` and `next`, so the next bead stacks on top. Then
@@ -102,7 +109,8 @@ resume it once; if it still does not finish, flag `human`.
 
 Short. Do not restate findings. Print one of:
 - ready for review: the branch, the command to view it (`jj show <branch>` or
-  `git show <branch>`), `metadata.rounds`, and each `assumption:` from
+  `git show <branch>`), `metadata.rounds`, the beads in `frozen_changed`
+  (their frozen tests were changed), and each `assumption:` from
   `metadata.tdd` (the frozen tests encode them, so the owner must see them)
 - needs the owner's decision: the bead ID and the question from its notes
 - not started: the failed check from "Before you start"
