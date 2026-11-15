@@ -60,18 +60,16 @@ owner before step 2, and suggest adding the section.
 2. **Write tests.** Run `beads-workflow:test-writer` with the bead ID, `vcs`
    and the gate command. `BLOCKED: human` -> stop this bead. `SKIP` -> step 3.
    `DONE` -> freeze the tests: read `.[0].metadata.tdd_files` from `bd show`,
-   run `shasum <files> | shasum` with the paths written out, and record the
-   hash with `bd update <id> --set-metadata tdd_sum=<hash>`.
+   run `shasum <files> | shasum` with the paths written out, then copy the
+   printed hash into `bd update <id> --set-metadata tdd_sum=<hash>`.
 3. **Implement.** Run `beads-workflow:implementer` with the bead ID, `vcs` and
    the gate command. `BLOCKED: human` -> stop this bead.
-4. **Gate.** Run each gate command yourself as a plain line, never through a
-   shell variable (fish does not split it into words), with its output sent
-   to a file: `<command> > /tmp/bd-gate-<id>.log 2>&1`. Test logs are long and
-   would fill your context on every run, so use only the exit code; on a
-   failure, read `tail -n 30 /tmp/bd-gate-<id>.log`. Do not add
-   `echo $?`: the Bash tool already reports the exit code, and a shell
-   variable makes Claude Code ask for approval. Exit 127 means command
-   not found, not a failed gate: fix the command.
+4. **Gate.** Run each gate command yourself as a plain line (see "Rules"),
+   with its output sent to a file: `<command> > /tmp/bd-gate-<id>.log 2>&1`.
+   Test logs are long and would fill your context on every run, so use only
+   the exit code the Bash tool reports; on a failure, read
+   `tail -n 30 /tmp/bd-gate-<id>.log`. Exit 127 means command not found, not
+   a failed gate: fix the command.
    Record `bd update <id> --set-metadata gate=pass|fail`. On a failure, write
    `GATE FAILED: <command> exited <code>` plus those lines into the bead notes,
    run `beads-workflow:reviser`, and skip the review this round.
@@ -138,3 +136,7 @@ Short. Do not restate findings. Print one of:
   An agent can report DONE while its background commands still run, and keep
   editing files after the commit, landing them in the next bead's change.
 - Keep your own context small: never read a diff or files, never copy agent output.
+- Write every command out in full: no shell variables (`$?`, `H=$(...)`),
+  loops or heredocs. Claude Code cannot check them and asks for approval, and
+  fish does not split a variable into words. Copy values such as a hash or a
+  change id from one command's output into the next command.
