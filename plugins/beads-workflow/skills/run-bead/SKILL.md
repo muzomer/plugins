@@ -68,7 +68,9 @@ owner before step 2, and suggest adding the section.
    shell variable (fish does not split it into words), with its output sent
    to a file: `<command> > /tmp/bd-gate-<id>.log 2>&1`. Test logs are long and
    would fill your context on every run, so use only the exit code; on a
-   failure, read `tail -n 30 /tmp/bd-gate-<id>.log`. Exit 127 means command
+   failure, read `tail -n 30 /tmp/bd-gate-<id>.log`. Do not add
+   `echo $?`: the Bash tool already reports the exit code, and a shell
+   variable makes Claude Code ask for approval. Exit 127 means command
    not found, not a failed gate: fix the command.
    Record `bd update <id> --set-metadata gate=pass|fail`. On a failure, write
    `GATE FAILED: <command> exited <code>` plus those lines into the bead notes,
