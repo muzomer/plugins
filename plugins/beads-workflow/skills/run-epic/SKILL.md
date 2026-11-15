@@ -54,15 +54,20 @@ Skip this section if no bead was committed in this run.
    and keep `FULL SUITE FAILED: <command> exited <code>; caused by <cause>`
    plus the last lines of the error for the epic note. Do not run the reviser:
    the owner decides the fix.
+4. The cause is a bead ID: run `beads-workflow:diagnoser` with that bead ID,
+   its branch, `vcs`, the failing command and the error lines, then stop it
+   (`TaskStop`). Its return (at most 5 lines) is the one agent output you copy:
+   keep it for the epic note and the report, labelled "likely cause".
 
 ## Final report
 
 Short. Do not restate findings. Print:
-- first, the full suite result; on a failure, the command and its cause
+- first, the full suite result; on a failure, the command, its cause, and the
+  diagnosis (if any)
 - beads ready for review, in stack order, each with its branch and view
   command (as in the run-bead final report)
 - beads that need the owner's decision (`bd human list`), with IDs
 - `metadata.rounds` per bead
 
-Write one note on the epic: the full suite failure line (if any), order,
-branches, rounds.
+Write one note on the epic: the full suite failure line and diagnosis (if
+any), order, branches, rounds.
