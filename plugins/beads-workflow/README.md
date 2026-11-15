@@ -15,6 +15,12 @@ Each bead follows the same sequence: implementation, quality gate, review,
 revision (at most three rounds), and a commit with a Conventional Commit message
 on a dedicated branch named `type-short-summary`, stacked on the previous bead.
 
+After the last bead of an epic, `run-epic` runs every gate command of the
+project once on top of the stack, to catch breakage between areas that the
+per-bead gates miss. A failure is reported to the owner and is not fixed
+automatically. The suite does not run before the first bead, so a failure that
+already existed in the base is reported the same way.
+
 ## Installation
 
 ```sh
@@ -60,6 +66,7 @@ command before starting.
 | Metadata | `gate`                         | Result of the last gate run: `pass` or `fail`                        |
 | Metadata | `verdict`, `review_round`      | Result and round number of the last review                           |
 | Metadata | `bookmark`, `change`, `rounds` | Branch name (jj or git), change or commit ID, and review rounds used |
+| Metadata | `full_suite` (epic only)       | Result of the full suite after the last bead: `pass` or `fail`       |
 
 To answer a bead labelled `human`, record the answer with
 `bd update <id> --notes "..."`, remove the label with

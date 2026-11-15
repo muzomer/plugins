@@ -37,13 +37,32 @@ above already does those checks, and the report is the one below. When a step
 says "stop this bead", move on to the next bead. The `human` answers, gate
 commands and rules also live there.
 
+## After the last bead: full suite
+
+Each bead runs only the gate row for the area it touches, so a change in one
+area can break another area unnoticed. Once the query prints nothing, check the
+whole stack:
+
+1. Skip this section if no bead was committed in this run: nothing new to check.
+2. Read every row of the project's `## Quality gates` section and run each
+   distinct command once, on top of the stack. Run each command as a plain line
+   and check its exit code, as in the run-bead **Gate** step. Exit 127 means
+   the command was not found: fix the command, do not count it as a failure.
+3. All pass: `bd update <epic> --set-metadata full_suite=pass`.
+4. Any fails: `bd update <epic> --set-metadata full_suite=fail`, and keep the
+   line `FULL SUITE FAILED: <command> exited <code>` plus the last lines of the
+   error for the epic note (see "Final report"). Do not run the reviser: the
+   cause can be in any bead of the stack, so the owner decides the fix.
+
 ## Final report
 
 Short. Do not restate findings. Print:
+- the full suite result first, when it ran; on a failure, the failing command
 - beads ready for review, in stack order, each with its branch and the command
   to view it (`jj show <branch>` or `git show <branch>`; `hunk show <branch>` if
   `hunk` is installed)
 - beads that need the owner's decision (`bd human list`), with IDs
 - rounds used per bead (`metadata.rounds`)
 
-Also write one note on the epic: order, branches, rounds.
+Also write one note on the epic: the full suite failure line (if any), order,
+branches, rounds.

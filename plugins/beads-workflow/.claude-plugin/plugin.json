@@ -1,6 +1,6 @@
 {
   "name": "beads-workflow",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Implement Beads (bd) issues and epics with implementer, reviewer and reviser agents; each bead becomes one reviewed jj or git commit on its own branch",
   "author": { "name": "Muzaffar Omer", "url": "https://github.com/muzomer" },
   "repository": "https://github.com/muzomer/plugins",
