@@ -83,8 +83,7 @@ resume it once; if it still does not finish, flag `human`.
 
 Short. Do not restate findings. Print one of:
 - ready for review: the branch, the command to view it (`jj show <branch>` or
-  `git show <branch>`; `hunk show <branch>` if `hunk` is installed), and
-  `metadata.rounds`
+  `git show <branch>`), and `metadata.rounds`
 - needs the owner's decision: the bead ID and the question from its notes
 - not started: the failed check from "Before you start"
 

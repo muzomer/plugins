@@ -38,7 +38,6 @@ claude plugin install beads-workflow@muzomer    # use the same --scope value
 - `jq`
 - `jj` or `git`; with jj, a version that has `jj bisect run` (tested with 0.41)
 - `bash`, used to run gate commands during bisect
-- `hunk` (optional): when installed, the final report suggests `hunk show <branch>`
 
 ## Project setup
 
