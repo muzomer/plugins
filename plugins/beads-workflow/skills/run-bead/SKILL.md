@@ -35,9 +35,26 @@ In git, each bead's branch starts from the previous bead's branch, so the
 branches stack like jj bookmarks. If `git switch -c` fails because the branch
 exists, pick another name; never reset or overwrite a branch.
 
+## Sync beads
+
+Beads may also change elsewhere (another machine, a cloud agent), and they
+meet only on the Dolt remote. First run `bd dolt remote list`:
+
+- It prints `No remotes configured.`: skip the pull and the push. The local
+  database is the only copy, so nothing can be stale.
+- It fails (e.g. no beads database): stop and report the exact error.
+
+- **Pull at the start**, before any check: `bd dolt pull`. If it fails, stop
+  and report the exact error: working on stale beads can redo or undo work.
+- **Push at the end**, before the final report: `bd dolt push`, so labels,
+  notes and metadata reach the remote. If it fails, put the command and error
+  in the report; the commits are safe either way.
+
+`run-epic` does each once per run, not per bead.
+
 ## Before you start (single bead only)
 
-Stop with a one-line reason if any check fails:
+Pull first (see "Sync beads"). Stop with a one-line reason if any check fails:
 
 - The bead is not closed, and has neither the `needs-review` nor the `human` label.
 - Every `blocks` dependency is closed or has `needs-review`. A `needs-review`
@@ -129,7 +146,7 @@ resume it once; if it still does not finish, flag `human`.
 
 ## Final report (single bead only)
 
-Short. Do not restate findings. Print one of:
+Push first (see "Sync beads"). Short. Do not restate findings. Print one of:
 - ready for review: the branch, the command to view it (`jj show <branch>` or
   `git show <branch>`), `metadata.rounds`, the beads in `frozen_changed`
   (their frozen tests were changed), and each `assumption:` from
@@ -137,10 +154,16 @@ Short. Do not restate findings. Print one of:
 - needs the owner's decision: the bead ID and the question from its notes
 - not started: the failed check from "Before you start"
 
+Also print the push result, or `beads sync: skipped (no remote)`. For a bead
+ready for review, end with the owner's next step: once approved and shipped,
+`bd close <id>`, then (with a remote) `bd dolt push`. Other agents only see
+the close after that push.
+
 ## Rules
 
-- Never push, never close a bead: the owner approves first. This includes
-  `bd human respond`, which closes the bead. When the owner answers a `human`
+- Never push code, never close a bead: the owner approves first. Pushing
+  beads (`bd dolt push`, see "Sync beads") is the one exception. Never closing
+  includes `bd human respond`, which closes the bead. When the owner answers a `human`
   bead, add the answer with `bd update <id> --append-notes "..."`, run
   `bd label remove <id> human`, and run the bead again.
 - One branch per bead, stacked in order.

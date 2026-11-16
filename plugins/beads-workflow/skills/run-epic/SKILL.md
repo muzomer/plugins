@@ -9,7 +9,9 @@ description: Run every ready child of a Beads (`bd`) epic, in dependency order, 
 
 Input: an epic bead ID. Read `${CLAUDE_PLUGIN_ROOT}/skills/run-bead/SKILL.md`
 once per run: its **Version control** (detect once per epic), **Gate
-commands**, **Steps** and **Rules** apply here. Skip its "Before you start" and
+commands**, **Steps** and **Rules** apply here. Follow its **Sync beads**
+(including the remote check) once per run: `bd dolt pull` before the first
+query below, `bd dolt push` before the final report. Skip its "Before you start" and
 "Final report": the query below does those checks, and the report is below.
 
 ## Per child bead
@@ -86,6 +88,9 @@ Short. Do not restate findings. Print:
   and assumptions (as in the run-bead final report)
 - beads that need the owner's decision (`bd human list`), with IDs
 - `metadata.rounds` per bead
+- the beads push result, or `beads sync: skipped (no remote)`, and the
+  owner's next step: once approved and shipped, `bd close <id>` for each
+  bead, then (with a remote) `bd dolt push`
 
 Write one note on the epic: the full suite failure line and diagnosis, or
 the epic review lines; then order, branches, rounds.

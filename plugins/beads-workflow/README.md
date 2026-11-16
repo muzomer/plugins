@@ -1,7 +1,9 @@
 # beads-workflow
 
 Converts Beads issues into reviewed commits, one bead at a time. The repository
-owner remains the approver: the workflow never pushes and never closes a bead.
+owner remains the approver: the workflow never pushes code and never closes a
+bead. It only syncs the beads themselves with their Dolt remote, when one is
+set: it pulls before it starts and pushes before its report.
 
 | Component | Name                            | Role                                                           |
 | --------- | ------------------------------- | -------------------------------------------------------------- |
@@ -44,7 +46,7 @@ claude plugin install beads-workflow@muzomer    # use the same --scope value
 ## Requirements
 
 - [`bd`](https://github.com/gastownhall/beads), written against version 1.2.2;
-  `bd update --claim` and `--set-metadata` are required
+  `bd update --claim`, `--set-metadata` and `bd dolt pull`/`push` are required
 - `jq`
 - `jj` or `git`; with jj, a version that has `jj bisect run` (tested with 0.41)
 - `bash`, used to run gate commands during bisect
