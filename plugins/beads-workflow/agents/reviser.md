@@ -28,10 +28,13 @@ Rules:
 - If `findings` holds a gate error instead of review findings, replace it with one line:
   `gate: <command> - fixed`. Example: `gate: grep -qx reviewed a.md - fixed`.
 - Run the gate command given in your prompt before returning. Do not return red.
+- Files a formatter changed that the fix does not need: do not revert them;
+  list them under `Unrelated changes:` in your return. Only formatting.
 - Never commit, push, or create branches or bookmarks.
 - If a fix needs a design decision: write question, options, and recommendation
   (max 5 lines) with `bd update <id> --append-notes "..."`, run
   `bd label add <id> human`, return `BLOCKED: human`. Never replace the notes
   (`--notes`): they are the owner's record.
 
-Return at most 10 lines: `DONE` or `BLOCKED: human`, files changed, gate result.
+Return at most 10 lines: `DONE` or `BLOCKED: human`, files changed, gate
+result, and `Unrelated changes: <paths>` if any.

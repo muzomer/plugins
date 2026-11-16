@@ -21,7 +21,8 @@ never a raw command:
 |---|---|---|
 | status | `jj status` | `git status --porcelain` |
 | log | `jj log` | `git log --oneline` |
-| commit | `jj describe -m "<msg>"` | `git switch -c <branch>`, `git add -A`, `git commit -m "<msg>"` |
+| split | `jj split <files> -m "<msg>"` | `git switch -c <branch>`, `git add -- <files>`, `git commit -m "<msg>"` |
+| commit | `jj describe -m "<msg>"` | `git switch -c <branch>` (skip it if `split` already made the branch), `git add -A`, `git commit -m "<msg>"` |
 | branch | `jj bookmark create <branch>` | nothing: `commit` already made it |
 | next | `jj new` | nothing: HEAD is already on the new branch |
 | change id | `jj log -r @- --no-graph -T 'change_id.short()'` | `git rev-parse --short HEAD` |
@@ -111,8 +112,10 @@ owner before step 2, and suggest adding the section.
      `tdd_sum`. Then run `beads-workflow:reviser` (bead ID, `vcs`, gate
      command), run the gate, review again.
    - Still `ISSUES` after round 3, or no verdict anywhere: flag `human`, stop this bead.
-6. **Commit.** Run `status`: every changed file must belong to this bead;
-   anything else (another session, a leftover agent) -> stop and ask the owner.
+6. **Commit.** Run `status`: every changed file must belong to this bead, or
+   be listed under `Unrelated changes:` in the implementer's or reviser's
+   return (a formatter touched it; formatting only). Anything else (another
+   session, a leftover agent) -> stop and ask the owner.
    Then check earlier beads' frozen tests: for each bead with `needs-review`
    and a `tdd_sum` (`bd list --label needs-review --json`), run the step 2
    `shasum` over its `tdd_files`. A different hash (or a missing file) means
@@ -120,6 +123,10 @@ owner before step 2, and suggest adding the section.
    and the reviewer has checked it. Record
    `bd update <id> --set-metadata frozen_changed="<bead-id> ..."`, store the
    new hash as that bead's `tdd_sum`, and name it in the report.
+   Formatting-only files: `split` them first, message
+   `style(<area>): format <paths>` plus the attribution trailers, so they sit
+   in their own commit below the bead, on the bead's branch. No new gate run:
+   the files on disk do not change, and the gate already passed on them.
    Run `commit` with a Conventional Commit message (`type(scope): summary`) plus
    the session's attribution trailers, branch name `<type-short-summary>`; then
    `branch` and `next`, so the next bead stacks on top. Then

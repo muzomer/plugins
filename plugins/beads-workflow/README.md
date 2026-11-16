@@ -19,7 +19,8 @@ set: it pulls before it starts and pushes before its report.
 Each bead follows the same sequence: failing tests, implementation, quality
 gate, review, revision (at most three rounds), and a commit with a Conventional
 Commit message on a dedicated branch named `type-short-summary`, stacked on the
-previous bead.
+previous bead. Files that only a formatter changed outside the bead go into
+a separate `style(...)` commit just below it.
 `run-bead` owns these per-bead steps and `run-epic` reuses them, so a change
 to `run-bead` changes both.
 

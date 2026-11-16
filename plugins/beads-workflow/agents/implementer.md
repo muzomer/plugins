@@ -20,10 +20,15 @@ Rules:
   (written to the notes as below).
 - Never set the `tdd`, `tdd_files` or `tdd_sum` metadata.
 - Before returning, run the gate command. Fix failures; do not return red.
+- A formatter (the gate, a hook) may change files this bead does not need.
+  Do not revert them: list them in your return under `Unrelated changes:`, so
+  the orchestrator commits them apart. Only formatting; any other edit there
+  is scope creep.
 - Never commit, push, or create branches or bookmarks. The orchestrator does that.
 - If the bead is vague, too big, or needs a design choice: stop. Write the question,
   the options, and your recommendation (max 5 lines) with
   `bd update <id> --append-notes "..."` (never `--notes`: it would erase the
   owner's earlier answers), then `bd label add <id> human`, and return `BLOCKED: human`.
 
-Return at most 10 lines: `DONE` or `BLOCKED: human`, files changed, gate result.
+Return at most 10 lines: `DONE` or `BLOCKED: human`, files changed, gate
+result, and `Unrelated changes: <paths>` if any.
