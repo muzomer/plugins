@@ -31,6 +31,7 @@ never a raw command:
 | bisect | `jj bisect run --range '<good>..<bad>' -- bash -c '<command>'` | `git bisect start <bad> <good>`, `git bisect run bash -c '<command>'`, `git bisect reset` |
 | park | `jj describe -m "wip(<id>): parked"`, note the ref `jj log -r @ --no-graph -T 'change_id.short()'`, then `jj new @-` | `git stash push -u -m "wip <id>"`; the ref is `wip <id>` |
 | unpark | `jj squash --from <ref> --into @` | `git stash list` to find the entry `wip <id>`, then `git stash pop stash@{<n>}` |
+| landed | `jj log -r '<change> & ::trunk()' --no-graph -T 'change_id.short()'`: landed if it prints the ID; fails or prints nothing if not | `git merge-base --is-ancestor <change> <main>` (`<main>` is `origin/HEAD`, else `main`): landed if it exits 0 |
 
 In git, each bead's branch starts from the previous bead's branch, so the
 branches stack like jj bookmarks. If `git switch -c` fails because the branch
@@ -47,6 +48,17 @@ meet only on the Dolt remote. First run `bd dolt remote list`:
 
 - **Pull at the start**, before any check: `bd dolt pull`. If it fails, stop
   and report the exact error: working on stale beads can redo or undo work.
+- **Close landed beads**, right after the pull: for each bead from
+  `bd list --label needs-review --json`, run `landed` on its `metadata.change`.
+  Landed -> `bd close <id> --reason "landed on main"`. `bd close` refuses a bead
+  whose blocker is still open, and a stack lands blockers together with the
+  beads they block: repeat the pass until it closes nothing more, never
+  `--force` (a refusal that remains means a blocker that has not landed).
+  A bead without `change`,
+  or whose change no longer exists (squashed, rewritten), stays open: list it
+  in the report so the owner checks it. Landing on main is the owner's
+  approval, so closing here needs no extra word from the owner, and nobody has
+  to remember to close each bead by hand.
 - **Push at the end**, before the final report: `bd dolt push`, so labels,
   notes and metadata reach the remote. If it fails, put the command and error
   in the report; the commits are safe either way.
@@ -163,15 +175,16 @@ Push first (see "Sync beads"). Short. Do not restate findings. Print one of:
 - needs the owner's decision: the bead ID and the question from its notes
 - not started: the failed check from "Before you start"
 
-Also print the push result, or `beads sync: skipped (no remote)`. For a bead
-ready for review, end with the owner's next step: once approved and shipped,
-`bd close <id>`, then (with a remote) `bd dolt push`. Other agents only see
-the close after that push.
+Also print the beads closed as landed, the `needs-review` beads whose change
+could not be found, and the push result, or `beads sync: skipped (no remote)`.
+For a bead ready for review, end with the owner's next step: approve it by
+landing the branch on main; the next run closes the bead.
 
 ## Rules
 
-- Never push code, never close a bead: the owner approves first. Pushing
-  beads (`bd dolt push`, see "Sync beads") is the one exception. Never closing
+- Never push code, never close a bead the owner has not landed on main: the
+  owner approves first. Pushing beads (`bd dolt push`, see "Sync beads") and
+  closing landed beads (see "Close landed beads") are the exceptions. Never closing
   includes `bd human respond`, which closes the bead. When the owner answers a `human`
   bead, add the answer with `bd update <id> --append-notes "..."`, run
   `bd label remove <id> human`, and run the bead again.

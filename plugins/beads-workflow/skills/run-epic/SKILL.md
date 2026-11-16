@@ -88,9 +88,10 @@ Short. Do not restate findings. Print:
   and assumptions (as in the run-bead final report)
 - beads that need the owner's decision (`bd human list`), with IDs
 - `metadata.rounds` per bead
-- the beads push result, or `beads sync: skipped (no remote)`, and the
-  owner's next step: once approved and shipped, `bd close <id>` for each
-  bead, then (with a remote) `bd dolt push`
+- the beads closed as landed, the `needs-review` beads whose change could not
+  be found, the beads push result, or `beads sync: skipped (no remote)`, and
+  the owner's next step: approve by landing the branches on main; the next
+  run closes their beads
 
 Write one note on the epic: the full suite failure line and diagnosis, or
 the epic review lines; then order, branches, rounds.

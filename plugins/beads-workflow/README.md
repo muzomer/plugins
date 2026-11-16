@@ -1,9 +1,11 @@
 # beads-workflow
 
 Converts Beads issues into reviewed commits, one bead at a time. The repository
-owner remains the approver: the workflow never pushes code and never closes a
-bead. It only syncs the beads themselves with their Dolt remote, when one is
-set: it pulls before it starts and pushes before its report.
+owner remains the approver: the workflow never pushes code, and approval is
+landing a bead's commit on main. At the start of each run it closes the
+`needs-review` beads whose commit is already on main, so no bead stays open
+after its work has shipped. It only syncs the beads themselves with their Dolt
+remote, when one is set: it pulls before it starts and pushes before its report.
 
 | Component | Name                            | Role                                                           |
 | --------- | ------------------------------- | -------------------------------------------------------------- |
@@ -103,7 +105,7 @@ check would have caught:
 
 | Kind     | Name                           | Meaning                                                              |
 | -------- | ------------------------------ | -------------------------------------------------------------------- |
-| Label    | `needs-review`                 | Committed and awaiting review and closure by the owner               |
+| Label    | `needs-review`                 | Committed and awaiting review; closed once its commit lands on main  |
 | Label    | `human`                        | Blocked on an owner decision; the open question is in the bead notes |
 | Metadata | `gate`                         | Result of the last gate run: `pass` or `fail`                        |
 | Metadata | `findings`                     | Current review findings or gate error; removed when review is clean |
