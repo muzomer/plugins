@@ -77,7 +77,8 @@ owner before step 2, and suggest adding the section.
    question with `bd update <id> --append-notes "..."`, `bd label add <id> human`, stop this bead.
 2. **Write tests.** Run `beads-workflow:test-writer` with the bead ID, `vcs`
    and the gate command. `BLOCKED: human` -> stop this bead. `SKIP` -> step 3.
-   `DONE` -> freeze the tests: read `.[0].metadata.tdd_files` from `bd show`,
+   `DONE` -> wait for the test-writer's completion notification (see
+   "Rules"), then freeze the tests: read `.[0].metadata.tdd_files` from `bd show`,
    run `shasum <files> | shasum` with the paths written out, then copy the
    printed hash into `bd update <id> --set-metadata tdd_sum=<hash>`.
 3. **Implement.** Run `beads-workflow:implementer` with the bead ID, `vcs` and
@@ -108,7 +109,8 @@ owner before step 2, and suggest adding the section.
    - Other `ISSUES` -> run `beads-workflow:test-writer` with `mode: findings` (bead
      ID, `vcs`, gate command), so each testable blocker gets a failing test
      from an agent that did not write the code. `BLOCKED: human` -> stop this
-     bead. Freeze again: the step 2 `shasum` over the new `tdd_files`, record
+     bead. Freeze again, after the test-writer's completion notification:
+     the step 2 `shasum` over the new `tdd_files`, record
      `tdd_sum`. Then run `beads-workflow:reviser` (bead ID, `vcs`, gate
      command), run the gate, review again.
    - Still `ISSUES` after round 3, or no verdict anywhere: flag `human`, stop this bead.
@@ -177,6 +179,10 @@ the close after that push.
 - Stop every agent (`TaskStop <agent-id>`) as soon as you have read its return.
   An agent can report DONE while its background commands still run, and keep
   editing files after the commit, landing them in the next bead's change.
+- An agent's return arrives before the agent has stopped: it can still run
+  commands (a formatter, `jj restore`) for a few seconds. Before you read or
+  hash any file an agent wrote, wait for its completion notification (the
+  `finished` task notice); the return alone is not enough.
 - Keep your own context small: never read a diff or files, never copy agent output.
 - Write every command out in full: no shell variables (`$?`, `H=$(...)`),
   loops or heredocs. Claude Code cannot check them and asks for approval, and
