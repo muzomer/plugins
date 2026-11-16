@@ -23,6 +23,7 @@ Rules:
 - Never commit, push, or create branches or bookmarks. The orchestrator does that.
 - If the bead is vague, too big, or needs a design choice: stop. Write the question,
   the options, and your recommendation (max 5 lines) with
-  `bd update <id> --notes "..."`, then `bd label add <id> human`, and return `BLOCKED: human`.
+  `bd update <id> --append-notes "..."` (never `--notes`: it would erase the
+  owner's earlier answers), then `bd label add <id> human`, and return `BLOCKED: human`.
 
 Return at most 10 lines: `DONE` or `BLOCKED: human`, files changed, gate result.

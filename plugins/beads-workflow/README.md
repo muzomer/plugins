@@ -103,6 +103,7 @@ check would have caught:
 | Label    | `needs-review`                 | Committed and awaiting review and closure by the owner               |
 | Label    | `human`                        | Blocked on an owner decision; the open question is in the bead notes |
 | Metadata | `gate`                         | Result of the last gate run: `pass` or `fail`                        |
+| Metadata | `findings`                     | Current review findings or gate error; removed when review is clean |
 | Metadata | `verdict`, `review_round`      | Result and round number of the last review                           |
 | Metadata | `bookmark`, `change`, `rounds` | Branch name (jj or git), change or commit ID, and review rounds used |
 | Metadata | `tdd`                          | Each test and why it failed before the code, or `skip: <reason>`     |
@@ -113,9 +114,11 @@ check would have caught:
 | Metadata | `full_suite_culprit` (epic)    | Cause of a failure: a bead ID, `pre-existing`, `flaky`, or `unknown` |
 
 To answer a bead labelled `human`, record the answer with
-`bd update <id> --notes "..."`, remove the label with
+`bd update <id> --append-notes "..."`, remove the label with
 `bd label remove <id> human`, and run the bead again. `bd human respond` is not
-suitable, because the command closes the bead.
+suitable, because the command closes the bead. The notes are only ever
+appended to, so earlier questions and answers stay; review findings are kept
+apart in the `findings` metadata.
 
 ## License
 

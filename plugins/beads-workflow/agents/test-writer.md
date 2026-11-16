@@ -15,7 +15,8 @@ plus the existing code the tests must call, and the test conventions in the
 nearest `CLAUDE.md` above the files you touch, then the repo root's.
 
 Findings mode: when your input says `mode: findings`, the reviewer found
-bugs. Read the `blocker` lines in the bead notes (do not change the notes).
+bugs. Read the `blocker` lines in the `findings` metadata
+(`bd show <id> --json | jq -r '.[0].metadata.findings // empty'`; do not change it).
 For each blocker you can test, write a test that reproduces the bug, in a new
 file, and confirm it fails. Then append to `tdd` one entry per blocker,
 `finding <file:line>: <test>: <why it failed>` or
@@ -56,7 +57,8 @@ Rules:
   `bd update <id> --set-metadata tdd="skip: <reason>"`, and return `SKIP`.
 - An acceptance criterion you cannot turn into a test (vague, contradictory):
   write the question, options and recommendation (max 5 lines) with
-  `bd update <id> --notes "..."`, run `bd label add <id> human`, return `BLOCKED: human`.
+  `bd update <id> --append-notes "..."` (never `--notes`: it would erase the
+  owner's earlier answers), run `bd label add <id> human`, return `BLOCKED: human`.
 - Never write production code. Never commit, push, or create branches or bookmarks.
 
 Return at most 10 lines: `DONE`, `SKIP` or `BLOCKED: human`, the test files,

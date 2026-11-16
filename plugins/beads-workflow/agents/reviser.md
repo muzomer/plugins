@@ -9,7 +9,7 @@ You fix review findings on ONE bead. Input: a bead ID, `vcs` (`jj` or `git`), an
 the reviewer re-checks it.
 
 Read only the findings:
-`bd show <id> --json | jq -r '.[0].notes // empty'`
+`bd show <id> --json | jq -r '.[0].metadata.findings // empty'`
 
 Rules:
 - Never edit the files in `.[0].metadata.tdd_files` and never set the `tdd`,
@@ -21,15 +21,17 @@ Rules:
 - If you disagree with a finding, do not change the code; say why in your reply.
   If that finding has a failing test, the gate cannot pass: treat it as a
   design decision (see the last rule).
-- Reply with `bd update <id> --notes "..."` replacing the findings. One line per
+- Reply with `bd update <id> --set-metadata "findings=..."` replacing the findings. One line per
   finding: keep the reviewer's line unchanged and append ` | fixed` or
   ` | disagree: <reason>`. Example: `blocker a.md:1 - missing line | fixed`.
   Leave unfixed nits exactly as the reviewer wrote them.
-- If the notes hold a gate error instead of findings, replace them with one line:
+- If `findings` holds a gate error instead of review findings, replace it with one line:
   `gate: <command> - fixed`. Example: `gate: grep -qx reviewed a.md - fixed`.
 - Run the gate command given in your prompt before returning. Do not return red.
 - Never commit, push, or create branches or bookmarks.
 - If a fix needs a design decision: write question, options, and recommendation
-  (max 5 lines) in the notes, run `bd label add <id> human`, return `BLOCKED: human`.
+  (max 5 lines) with `bd update <id> --append-notes "..."`, run
+  `bd label add <id> human`, return `BLOCKED: human`. Never replace the notes
+  (`--notes`): they are the owner's record.
 
 Return at most 10 lines: `DONE` or `BLOCKED: human`, files changed, gate result.
