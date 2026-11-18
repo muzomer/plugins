@@ -93,10 +93,12 @@ owner before step 2, and suggest adding the section.
    "Rules"), then freeze the tests: read `.[0].metadata.tdd_files` from `bd show`,
    run `shasum <files> | shasum` with the paths written out, then copy the
    printed hash into `bd update <id> --set-metadata tdd_sum=<hash>`.
-3. **Implement.** Run `beads-workflow:implementer` with the bead ID, `vcs` and
-   the gate command. `BLOCKED: human` -> stop this bead.
+3. **Implement.** Run `beads-workflow:implementer` with the bead ID, `vcs`,
+   the gate command, and the known pitfalls if any (run-epic only: its
+   "Known pitfalls" section). `BLOCKED: human` -> stop this bead.
 4. **Gate.** Run each gate command yourself as a plain line (see "Rules"),
-   with its output sent to a file: `<command> > /tmp/bd-gate-<id>.log 2>&1`.
+   in one foreground Bash call with `timeout: 600000`, with its output sent
+   to a file: `<command> > /tmp/bd-gate-<id>.log 2>&1`.
    Test logs are long and would fill your context on every run, so use only
    the exit code the Bash tool reports; on a failure, read
    `tail -n 30 /tmp/bd-gate-<id>.log`. Exit 127 means command not found, not
@@ -111,7 +113,7 @@ owner before step 2, and suggest adding the section.
    notes, flag `human`, stop this bead (the originals cannot be restored, so
    the owner decides). Then `bd update <id> --unset-metadata verdict` so an old
    verdict cannot be read as new. Run `beads-workflow:reviewer`
-   (bead ID, round number, `vcs`), then read
+   (bead ID, round number, `vcs`, and the known pitfalls if any), then read
    `bd show <id> --json | jq -r '.[0].metadata.verdict // empty'`; if empty,
    use the `VERDICT:` line of its return.
    - `CLEAN` -> step 6.
@@ -180,6 +182,10 @@ could not be found, and the push result, or `beads sync: skipped (no remote)`.
 For a bead ready for review, end with the owner's next step: approve it by
 landing the branch on main; the next run closes the bead.
 
+If the bead has `rules` metadata (`bd show <id> --json | jq -r '.[0].metadata.rules // empty'`),
+list them under "Proposed conventions" and ask the owner as in run-epic's
+"Proposed conventions".
+
 ## Rules
 
 - Never push code, never close a bead the owner has not landed on main: the
@@ -189,9 +195,12 @@ landing the branch on main; the next run closes the bead.
   bead, add the answer with `bd update <id> --append-notes "..."`, run
   `bd label remove <id> human`, and run the bead again.
 - One branch per bead, stacked in order.
-- Stop every agent (`TaskStop <agent-id>`) as soon as you have read its return.
-  An agent can report DONE while its background commands still run, and keep
-  editing files after the commit, landing them in the next bead's change.
+- Stop every agent (`TaskStop <agent-id>`) as soon as you have read its return,
+  and always before the next gate run. An agent can report DONE while its
+  background commands still run (its notice then says it is waiting on its own
+  background work): a test run of its own would overlap yours and make it
+  flaky, and it can keep editing files after the commit, landing them in the
+  next bead's change.
 - An agent's return arrives before the agent has stopped: it can still run
   commands (a formatter, `jj restore`) for a few seconds. Before you read or
   hash any file an agent wrote, wait for its completion notification (the

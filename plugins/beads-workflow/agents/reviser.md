@@ -24,10 +24,21 @@ Rules:
 - Reply with `bd update <id> --set-metadata "findings=..."` replacing the findings. One line per
   finding: keep the reviewer's line unchanged and append ` | fixed` or
   ` | disagree: <reason>`. Example: `blocker a.md:1 - missing line | fixed`.
+  A finding with a ` | rule: ...` part: keep it, and apply the rule to the
+  whole change, not only the line named.
   Leave unfixed nits exactly as the reviewer wrote them.
 - If `findings` holds a gate error instead of review findings, replace it with one line:
   `gate: <command> - fixed`. Example: `gate: grep -qx reviewed a.md - fixed`.
-- Run the gate command given in your prompt before returning. Do not return red.
+- While you fix, run only the tests you need (the failing `finding` tests,
+  tests of the files you touch). Before returning, run the full gate command
+  given in your prompt once, as one foreground Bash call with
+  `timeout: 600000` and its output sent to a file:
+  `<gate command> > /tmp/bd-gate-<id>.log 2>&1` (no pipe, so the exit code is
+  the gate's). The exit code is the result; on a failure read
+  `tail -n 30 /tmp/bd-gate-<id>.log`, fix, and run it again. Return green.
+- Let every command you start finish before you return: run each one in the
+  foreground and wait for it. A gate that needs more than 10 minutes: return
+  `BLOCKED: gate exceeds 10 minutes`.
 - Files a formatter changed that the fix does not need: do not revert them;
   list them under `Unrelated changes:` in your return. Only formatting.
 - Never commit, push, or create branches or bookmarks.

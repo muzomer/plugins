@@ -84,15 +84,23 @@ corresponding command after every change:
 
 When the section or the matching row is missing, the workflow requests the gate
 command before starting. Prefer quiet test flags (for example `pytest -q`): the
-workflow reads only the exit code and, on a failure, the last 30 lines.
+workflow reads only the exit code and, on a failure, the last 30 lines. Each
+gate command must finish within 10 minutes: agents run it as one foreground
+call with Claude Code's longest Bash timeout, and an agent whose gate takes
+longer stops with `BLOCKED: gate exceeds 10 minutes`. Split a slower suite
+into area rows.
 
 The skills run the coordinator on Sonnet, because it only routes work; each
 agent keeps its own model.
 
 An optional `## Review checklist` section lists the project's own risks. The
-reviewer checks each item, on top of its generic checks (inputs, error paths,
-security, state, resources). Add an item whenever a bug reaches review that a
-check would have caught:
+implementer follows each item and the reviewer checks it, on top of its
+generic checks (inputs, error paths, security, state, resources). The
+workflow grows this list: a reviewer marks a blocker any future change could
+repeat with a `rule:`, run-epic passes the rules found so far to the next
+beads' implementers as known pitfalls, and the final report proposes them as
+checklist items (or as a test or lint rule) for the owner to approve. Items
+look like this:
 
 ```markdown
 ## Review checklist
@@ -114,6 +122,7 @@ check would have caught:
 | Metadata | `tdd`                          | Each test and why it failed before the code, or `skip: <reason>`     |
 | Metadata | `tdd_files`, `tdd_sum`         | The frozen test files and their checksum                             |
 | Metadata | `frozen_changed`               | Earlier beads whose frozen tests this bead changed                   |
+| Metadata | `rules`                        | General rules the reviewer found, one per line; proposed as conventions |
 | Metadata | `parked`                       | Where a stopped bead's partial work waits: jj change or git stash    |
 | Metadata | `full_suite` (epic only)       | Result of the full suite after the last bead: `pass` or `fail`       |
 | Metadata | `full_suite_culprit` (epic)    | Cause of a failure: a bead ID, `pre-existing`, `flaky`, or `unknown` |

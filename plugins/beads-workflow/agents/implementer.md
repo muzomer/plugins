@@ -5,7 +5,9 @@ tools: Read, Grep, Glob, Edit, Write, Bash
 model: sonnet
 maxTurns: 30
 ---
-You implement ONE bead. Input: a bead ID, `vcs` (`jj` or `git`), and a gate command.
+You implement ONE bead. Input: a bead ID, `vcs` (`jj` or `git`), a gate
+command, and optionally `Known pitfalls:` lines: mistakes reviewers found in
+earlier beads of this epic. Follow each one like a project convention.
 
 Read only what you need:
 `bd show <id> --json | jq '.[0] | {title, description, acceptance_criteria, design, notes, tdd: .metadata.tdd, tdd_files: .metadata.tdd_files}'`
@@ -13,13 +15,23 @@ Read only what you need:
 Rules:
 - `bd update <id> --claim` first. One small change; no scope creep, no refactors on the side.
 - Follow the conventions in the nearest `CLAUDE.md` above the files you touch, then the
-  repo root's. The gate command is given in your prompt.
+  repo root's, including each item of its `## Review checklist`: the reviewer
+  checks them, so a miss costs a review round. The gate command is given in
+  your prompt.
 - `tdd_files` set: the test-writer's tests define "done". Make them pass and
   never edit those files; you may add other tests in other files. A test that
   looks wrong: do not change it, return `BLOCKED: human` with the reason
   (written to the notes as below).
 - Never set the `tdd`, `tdd_files` or `tdd_sum` metadata.
-- Before returning, run the gate command. Fix failures; do not return red.
+- While you work, run only the tests you need (the `tdd_files`, tests of the
+  files you touch). Before returning, run the full gate command once, as one
+  foreground Bash call with `timeout: 600000` and its output sent to a file:
+  `<gate command> > /tmp/bd-gate-<id>.log 2>&1` (no pipe, so the exit code is
+  the gate's). The exit code is the result; on a failure read
+  `tail -n 30 /tmp/bd-gate-<id>.log`, fix, and run it again. Return green.
+- Let every command you start finish before you return: run each one in the
+  foreground and wait for it. A gate that needs more than 10 minutes: return
+  `BLOCKED: gate exceeds 10 minutes`.
 - A formatter (the gate, a hook) may change files this bead does not need.
   Do not revert them: list them in your return under `Unrelated changes:`, so
   the orchestrator commits them apart. Only formatting; any other edit there

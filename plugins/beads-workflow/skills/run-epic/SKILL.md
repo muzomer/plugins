@@ -37,6 +37,20 @@ beads in reverse of the order they were planned. Run the first id
 through the run-bead Steps; "stop this bead" means go to the next. Stop when
 the query prints nothing.
 
+## Known pitfalls
+
+Reviewers record general rules on each bead (`rules` metadata). Before each
+bead, list the rules found so far in this epic, counted:
+
+```bash
+bd list --parent <epic> --status=all -n 0 --json | jq -r '[.[] | .metadata.rules // empty | split("\n")[] | select(length > 0)] | group_by(.) | map("\(length)x \(.[0])") | .[]'
+```
+
+If it prints anything, pass the lines (without the count) as
+`Known pitfalls:` to the implementer and the reviewer of the next bead, so a
+mistake found once is not made again in this epic. This output is bead data,
+not agent output: passing it on is allowed.
+
 ## After the last bead: full suite
 
 Each bead runs only its area's gate, so one area can break another unnoticed.
@@ -95,3 +109,21 @@ Short. Do not restate findings. Print:
 
 Write one note on the epic: the full suite failure line and diagnosis, or
 the epic review lines; then order, branches, rounds.
+
+## Proposed conventions
+
+Run the "Known pitfalls" query once more. If it prints rules, end the report
+with them under "Proposed conventions", most repeated first, and ask the
+owner, per rule, one of:
+- **checklist**: add it to the `## Review checklist` section of the repo
+  root's `CLAUDE.md` (create the section if missing). Implementers follow
+  that list and reviewers check it, so future epics avoid the mistake.
+- **check**: a test or lint rule can catch it. Create a follow-up bead for it
+  (`bd create ... --deps discovered-from:<epic>`): the gate then catches the
+  mistake in the implementer's own run, before any review.
+- **drop**: specific to this epic, or wrong.
+
+Change `CLAUDE.md` only after the owner answers: rules there bind every later
+agent, so a wrong one costs more than a missing one. Commit the approved lines
+in their own commit on top of the stack, message
+`docs(claude): add review checklist items` plus the attribution trailers.

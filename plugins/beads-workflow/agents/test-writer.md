@@ -33,7 +33,10 @@ Rules:
   the interface (names, signatures) to match the bead's design.
 - Put your tests in new files, or in files no one else changes for this bead:
   the files are frozen after you return, so the implementer cannot edit them.
-- Run only your tests, using the project's test runner from the gate command.
+- Run only your tests, using the project's test runner from the gate command
+  (or the single-test command the root `CLAUDE.md` gives). Run each as one
+  foreground Bash call with `timeout: 600000`, and let it finish before you
+  go on or return; judge it by its exit code and the failing tests it names.
   A test of new behaviour must fail because the behaviour is missing: a failed
   assertion, or the code under test not existing yet. In that second case, let
   the tests fail the way the language reports it (a compile error, a missing
