@@ -83,8 +83,12 @@ corresponding command after every change:
 ```
 
 When the section or the matching row is missing, the workflow requests the gate
-command before starting. Prefer quiet test flags (for example `pytest -q`): the
-workflow reads only the exit code and, on a failure, the last 30 lines. Each
+command before starting, and offers to save the answer as a row of the table
+in its own commit. Prefer quiet test flags (for example `pytest -q`): the
+workflow reads only the exit code and, on a failure, the last 30 lines. Prefer
+the runner's parallel mode too (`pytest -n auto`, `make -j`, or one process
+per test file with `xargs -P`) when tests share no temp folders, ports or
+databases: the gate runs several times per bead, so its speed adds up. Each
 gate command must finish within 10 minutes: agents run it as one foreground
 call with Claude Code's longest Bash timeout, and an agent whose gate takes
 longer stops with `BLOCKED: gate exceeds 10 minutes`. Split a slower suite

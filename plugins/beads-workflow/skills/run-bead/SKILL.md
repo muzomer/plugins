@@ -78,7 +78,15 @@ Pull first (see "Sync beads"). Stop with a one-line reason if any check fails:
 
 Read the `## Quality gates` section of the project's root `CLAUDE.md` and pick
 the row for the area the bead touches. No section or no matching row: ask the
-owner before step 2, and suggest adding the section.
+owner for the gate command before step 2. In the same question, suggest the
+test runner's parallel mode (for example `pytest -n auto`, `make -j`): the gate
+runs several times per bead, so its speed multiplies, but parallel runs suit
+only tests that share no temp folders, ports or databases, so the owner
+decides. Offer to save the answer as a row of the `## Quality gates` table
+(create the section if missing). Accepted: add it to the root `CLAUDE.md` and
+commit it alone, before the first bead, with message
+`docs(claude): add quality gate for <area>` plus the attribution trailers, so
+later runs do not ask again. Declined: use the answer for this run only.
 
 ## Steps
 
