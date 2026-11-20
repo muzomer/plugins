@@ -26,6 +26,51 @@ a separate `style(...)` commit just below it.
 `run-bead` owns these per-bead steps and `run-epic` reuses them, so a change
 to `run-bead` changes both.
 
+## How a bead runs
+
+The diagram shows one bead through `run-bead`. Rounded boxes start or stop the
+run; boxes with an agent name run that agent. The review loop allows three
+rounds, and any path to "Stop for owner" leaves the bead open with a question in
+its notes.
+
+```mermaid
+flowchart TD
+    start(["run-bead ID"]) --> sync["bd dolt pull, then close beads that have landed on main"]
+    sync --> pre{"Ready? Criteria set, no open blockers"}
+    pre -- "no" --> stopPre(["Stop: report the failed check"])
+    pre -- "yes" --> planner["planner (Opus): unit tests, then design"]
+
+    planner -- "BLOCKED: human" --> human(["Stop for owner: question in notes"])
+    planner -- "SKIP: nothing to test" --> impl
+    planner -- "DONE" --> freeze1["Freeze tests: record tdd_sum"]
+    freeze1 --> impl["implementer (Haiku): apply the design step by step"]
+
+    impl -- "BLOCKED: human" --> human
+    impl -- "DONE" --> gate{"Gate command passes?"}
+    gate -- "no" --> gateFix["reviser (Haiku): fix the gate error, this round is used"]
+    gateFix -- "DONE" --> round
+    gate -- "yes" --> round{"Review round 1 to 3?"}
+
+    round -- "no: round 3 still has issues" --> human
+    round -- "yes" --> tamper{"Frozen tests unchanged since tdd_sum?"}
+    tamper -- "no" --> human
+    tamper -- "yes" --> reviewer["reviewer (Opus): verdict, findings and fix_plan"]
+
+    reviewer -- "CLEAN" --> commit
+    reviewer -- "ISSUES, one needs owner" --> human
+    reviewer -- "ISSUES, testable blockers" --> planner2["planner in findings mode: failing test per blocker"]
+    planner2 -- "BLOCKED: human" --> human
+    planner2 -- "DONE" --> freeze2["Freeze again: record tdd_sum"]
+    freeze2 --> reviser["reviser (Haiku): apply fix_plan"]
+    reviser -- "BLOCKED: human" --> human
+    reviser -- "DONE" --> gate
+
+    commit["Check changed files, frozen tests of earlier beads, then commit on a branch"] --> label["Label needs-review, record branch, change and rounds"]
+    label --> report(["Push beads, report the branch for owner review"])
+```
+
+The owner approves a bead by landing its branch on main. The next run closes it.
+
 After the last bead of an epic, `run-epic` runs every gate command of the
 project once on top of the stack, to catch breakage between areas that the
 per-bead gates miss. A failure is reported to the owner and is not fixed
