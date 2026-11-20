@@ -29,7 +29,8 @@ to `run-bead` changes both.
 ## How a bead runs
 
 The diagram shows one bead through `run-bead`. Rounded boxes start or stop the
-run; boxes with an agent name run that agent. The review loop allows three
+run; boxes with an agent name run that agent. Blue boxes use Opus, green boxes
+use Haiku, and red boxes stop for the owner. The review loop allows three
 rounds, and any path to "Stop for owner" leaves the bead open with a question in
 its notes.
 
@@ -67,6 +68,13 @@ flowchart TD
 
     commit["Check changed files, frozen tests of earlier beads, then commit on a branch"] --> label["Label needs-review, record branch, change and rounds"]
     label --> report(["Push beads, report the branch for owner review"])
+
+    classDef opus fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
+    classDef haiku fill:#dcfce7,stroke:#166534,color:#14532d
+    classDef owner fill:#fee2e2,stroke:#991b1b,color:#7f1d1d
+    class planner,planner2,reviewer opus
+    class impl,gateFix,reviser haiku
+    class human owner
 ```
 
 The owner approves a bead by landing its branch on main. The next run closes it.
