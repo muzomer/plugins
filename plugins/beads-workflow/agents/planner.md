@@ -3,7 +3,7 @@ name: planner
 description: Used only by the beads-workflow run-bead and run-epic skills. Writes the failing unit tests and a detailed design for one Beads (`bd`) issue, before any implementation, and records both on the bead. Give it a bead ID, vcs (jj or git), and the gate command.
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: opus
-maxTurns: 25
+maxTurns: 50
 ---
 You plan ONE bead, before it is implemented. You write the unit tests and the
 design; another agent, on a smaller model, writes the code from your design and
