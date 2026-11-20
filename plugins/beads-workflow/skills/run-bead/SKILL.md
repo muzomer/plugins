@@ -2,7 +2,7 @@
 name: run-bead
 # The coordinator only routes work, so Sonnet is enough; each agent keeps its own model.
 model: sonnet
-description: Run one Beads (`bd`) issue through test-writer, implementer, reviewer and reviser agents (max 3 review rounds), then commit it on its own jj bookmark or git branch for the owner to review. Use when the user runs "/beads-workflow:run-bead <id>", asks to run or implement a bead by ID, or approves implementing a bead just discussed (e.g. "go ahead") - never implement a bead inline. Use run-epic for an epic.
+description: Run one Beads (`bd`) issue through planner, implementer, reviewer and reviser agents (max 3 review rounds), then commit it on its own jj bookmark or git branch for the owner to review. Use when the user runs "/beads-workflow:run-bead <id>", asks to run or implement a bead by ID, or approves implementing a bead just discussed (e.g. "go ahead") - never implement a bead inline. Use run-epic for an epic.
 ---
 
 # Run bead
@@ -95,9 +95,10 @@ later runs do not ask again. Declined: use the answer for this run only.
    back, then `bd update <id> --unset-metadata parked`.
    No acceptance criteria, or clearly more than one small change: write the
    question with `bd update <id> --append-notes "..."`, `bd label add <id> human`, stop this bead.
-2. **Write tests.** Run `beads-workflow:test-writer` with the bead ID, `vcs`
-   and the gate command. `BLOCKED: human` -> stop this bead. `SKIP` -> step 3.
-   `DONE` -> wait for the test-writer's completion notification (see
+2. **Plan and write tests.** Run `beads-workflow:planner` with the bead ID, `vcs`
+   and the gate command. The planner writes the unit tests and the design (the
+   `design` field); the implementer applies that design. `BLOCKED: human` -> stop
+   this bead. `SKIP` -> step 3. `DONE` -> wait for the planner's completion notification (see
    "Rules"), then freeze the tests: read `.[0].metadata.tdd_files` from `bd show`,
    run `shasum <files> | shasum` with the paths written out, then copy the
    printed hash into `bd update <id> --set-metadata tdd_sum=<hash>`.
@@ -117,7 +118,7 @@ later runs do not ask again. Declined: use the answer for this run only.
    `beads-workflow:reviser`, and skip the review this round.
 5. **Review loop, max 3 rounds.** Before each review, if `tdd_sum` is set, run
    the same `shasum` command again. A different hash means the frozen tests
-   were changed: append `blocker - test files changed after test-writer` to the
+   were changed: append `blocker - test files changed after planner` to the
    notes, flag `human`, stop this bead (the originals cannot be restored, so
    the owner decides). Then `bd update <id> --unset-metadata verdict` so an old
    verdict cannot be read as new. Run `beads-workflow:reviewer`
@@ -128,13 +129,13 @@ later runs do not ask again. Declined: use the answer for this run only.
    - `ISSUES` with a blocker marked `needs owner` in the findings -> append
      that blocker to the notes (the owner answers there), flag `human`, stop
      this bead. No agent can fix it, so the fix loop would only cost runs.
-   - Other `ISSUES` -> run `beads-workflow:test-writer` with `mode: findings` (bead
+   - Other `ISSUES` -> run `beads-workflow:planner` with `mode: findings` (bead
      ID, `vcs`, gate command), so each testable blocker gets a failing test
-     from an agent that did not write the code. `BLOCKED: human` -> stop this
-     bead. Freeze again, after the test-writer's completion notification:
+     from the planner. `BLOCKED: human` -> stop this
+     bead. Freeze again, after the planner's completion notification:
      the step 2 `shasum` over the new `tdd_files`, record
      `tdd_sum`. Then run `beads-workflow:reviser` (bead ID, `vcs`, gate
-     command), run the gate, review again.
+     command), which follows the reviewer's `fix_plan`, run the gate, review again.
    - Still `ISSUES` after round 3, or no verdict anywhere: flag `human`, stop this bead.
 6. **Commit.** Run `status`: every changed file must belong to this bead, or
    be listed under `Unrelated changes:` in the implementer's or reviser's

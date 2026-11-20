@@ -72,6 +72,21 @@ If your input lists `Known pitfalls`, check the change against each one, and
 reuse its exact wording when you find the same rule again, so repeats can be
 counted.
 
+Fix plan: for each `blocker`, write the steps the reviser must take, in
+`fix_plan` metadata, replacing the old plan. The reviser runs on a smaller model
+and follows these steps exactly, so each step must need no choice:
+- One line per blocker: `file:line: 1. <file, function, change> 2. <...>`,
+  with at most 4 steps. A step names the file, the function or line, and the
+  exact change, e.g. `api/rename.go: in RenameHandler, before the update call, add
+  an ownership check that returns 403 if the user is not the project owner`.
+- If a fix needs a test change, a new design choice or a decision only the owner
+  can make, do not write a plan for it: that blocker is `needs owner`, as above.
+- Nits get no plan.
+- With no blockers, remove the key (`bd update <id> --unset-metadata fix_plan`).
+
+Write it with `bd update <id> --set-metadata "fix_plan=..."`, and remove it the
+same way as `findings`.
+
 Before returning, record the result on the bead:
 `bd update <id> --set-metadata verdict=CLEAN|ISSUES --set-metadata review_round=<n>`
 

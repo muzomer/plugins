@@ -11,10 +11,10 @@ remote, when one is set: it pulls before it starts and pushes before its report.
 | --------- | ------------------------------- | -------------------------------------------------------------- |
 | Skill     | `/beads-workflow:run-bead <id>` | Runs a single bead                                             |
 | Skill     | `/beads-workflow:run-epic <id>` | Runs every ready child of an epic, in dependency order         |
-| Agent     | `beads-workflow:test-writer`    | Writes failing tests for the acceptance criteria, before code  |
-| Agent     | `beads-workflow:implementer`    | Implements the change, without committing                      |
-| Agent     | `beads-workflow:reviewer`       | Checks the acceptance criteria, then tries to break the change |
-| Agent     | `beads-workflow:reviser`        | Resolves the blocker findings raised by the reviewer           |
+| Agent     | `beads-workflow:planner`        | Writes the failing unit tests and the detailed design (Opus)   |
+| Agent     | `beads-workflow:implementer`    | Applies the design, without committing (Haiku)                 |
+| Agent     | `beads-workflow:reviewer`       | Checks the acceptance criteria, then writes a fix plan (Opus)  |
+| Agent     | `beads-workflow:reviser`        | Applies the reviewer's fix plan to the blockers (Haiku)        |
 | Agent     | `beads-workflow:diagnoser`      | Explains why a bead broke the full suite (read-only)           |
 | Agent     | `beads-workflow:epic-reviewer`  | Reviews all beads of an epic together (read-only)              |
 
@@ -59,15 +59,21 @@ claude plugin install beads-workflow@muzomer    # use the same --scope value
 Every bead requires **acceptance criteria**. Beads without acceptance criteria
 are flagged for a human decision instead of being implemented.
 
-Beads are built test-first. The test-writer turns each acceptance criterion
-into a test and confirms it fails before any code exists; it skips beads with
-nothing to test. Its test files are then frozen: the workflow records their
-checksum and stops the bead if the implementer or reviser changes them.
+Beads are built test-first. The planner turns each acceptance criterion into a
+test and confirms it fails before any code exists, then writes a detailed design
+(numbered steps with file, function and change) for the implementer to apply. It
+skips beads with nothing to test. Its test files are then frozen: the workflow
+records their checksum and stops the bead if the implementer or reviser changes them.
 
 In round 1, the reviewer also reviews adversarially: it looks for bugs the
-tests miss, and each blocker must name a concrete failing scenario. Before the
-reviser fixes a blocker, the test-writer adds a failing test that reproduces
-it, so every fix is proven by a test written by another agent.
+tests miss, and each blocker must name a concrete failing scenario. For each
+blocker it writes a fix plan, the steps the reviser must follow. Before the
+reviser fixes a blocker, the planner adds a failing test that reproduces it, so
+every fix is proven by a test written by another agent.
+
+The implementer and reviser run on Haiku, so they follow the planner's design and
+the reviewer's fix plan exactly. A step that cannot be applied as written stops
+the bead for the owner, rather than being improvised.
 
 The project's root `CLAUDE.md` requires a `## Quality gates` section. The
 workflow selects the row matching the area a bead touches and runs the
@@ -121,6 +127,8 @@ look like this:
 | Label    | `human`                        | Blocked on an owner decision; the open question is in the bead notes |
 | Metadata | `gate`                         | Result of the last gate run: `pass` or `fail`                        |
 | Metadata | `findings`                     | Current review findings or gate error; removed when review is clean |
+| Metadata | `fix_plan`                     | Steps the reviser follows for each blocker; removed when review is clean |
+| Field    | `design`                       | Detailed steps the implementer applies, written by the planner               |
 | Metadata | `verdict`, `review_round`      | Result and round number of the last review                           |
 | Metadata | `bookmark`, `change`, `rounds` | Branch name (jj or git), change or commit ID, and review rounds used |
 | Metadata | `tdd`                          | Each test and why it failed before the code, or `skip: <reason>`     |
