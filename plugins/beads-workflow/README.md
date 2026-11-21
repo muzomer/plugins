@@ -12,9 +12,9 @@ remote, when one is set: it pulls before it starts and pushes before its report.
 | Skill     | `/beads-workflow:run-bead <id>` | Runs a single bead                                             |
 | Skill     | `/beads-workflow:run-epic <id>` | Runs every ready child of an epic, in dependency order         |
 | Agent     | `beads-workflow:planner`        | Writes the failing unit tests and the detailed design (Opus)   |
-| Agent     | `beads-workflow:implementer`    | Applies the design, without committing (Haiku)                 |
+| Agent     | `beads-workflow:implementer`    | Applies the design, without committing (Sonnet)                 |
 | Agent     | `beads-workflow:reviewer`       | Checks the acceptance criteria, then writes a fix plan (Opus)  |
-| Agent     | `beads-workflow:reviser`        | Applies the reviewer's fix plan to the blockers (Haiku)        |
+| Agent     | `beads-workflow:reviser`        | Applies the reviewer's fix plan to the blockers (Sonnet)        |
 | Agent     | `beads-workflow:diagnoser`      | Explains why a bead broke the full suite (read-only)           |
 | Agent     | `beads-workflow:epic-reviewer`  | Reviews all beads of an epic together (read-only)              |
 
@@ -30,7 +30,7 @@ to `run-bead` changes both.
 
 The diagram shows one bead through `run-bead`. Rounded boxes start or stop the
 run; boxes with an agent name run that agent. Blue boxes use Opus, green boxes
-use Haiku, and red boxes stop for the owner. The review loop allows three
+use Sonnet, and red boxes stop for the owner. The review loop allows three
 rounds, and any path to "Stop for owner" leaves the bead open with a question in
 its notes.
 
@@ -44,11 +44,11 @@ flowchart TD
     planner -- "BLOCKED: human" --> human(["Stop for owner: question in notes"])
     planner -- "SKIP: nothing to test" --> impl
     planner -- "DONE" --> freeze1["Freeze tests: record tdd_sum"]
-    freeze1 --> impl["implementer (Haiku): apply the design step by step"]
+    freeze1 --> impl["implementer (Sonnet): apply the design step by step"]
 
     impl -- "BLOCKED: human" --> human
     impl -- "DONE" --> gate{"Gate command passes?"}
-    gate -- "no" --> gateFix["reviser (Haiku): fix the gate error, this round is used"]
+    gate -- "no" --> gateFix["reviser (Sonnet): fix the gate error, this round is used"]
     gateFix -- "DONE" --> round
     gate -- "yes" --> round{"Review round 1 to 3?"}
 
@@ -62,7 +62,7 @@ flowchart TD
     reviewer -- "ISSUES, testable blockers" --> planner2["planner in findings mode: failing test per blocker"]
     planner2 -- "BLOCKED: human" --> human
     planner2 -- "DONE" --> freeze2["Freeze again: record tdd_sum"]
-    freeze2 --> reviser["reviser (Haiku): apply fix_plan"]
+    freeze2 --> reviser["reviser (Sonnet): apply fix_plan"]
     reviser -- "BLOCKED: human" --> human
     reviser -- "DONE" --> gate
 
@@ -70,10 +70,10 @@ flowchart TD
     label --> report(["Push beads, report the branch for owner review"])
 
     classDef opus fill:#dbeafe,stroke:#1e40af,color:#1e3a8a
-    classDef haiku fill:#dcfce7,stroke:#166534,color:#14532d
+    classDef sonnet fill:#dcfce7,stroke:#166534,color:#14532d
     classDef owner fill:#fee2e2,stroke:#991b1b,color:#7f1d1d
     class planner,planner2,reviewer opus
-    class impl,gateFix,reviser haiku
+    class impl,gateFix,reviser sonnet
     class human owner
 ```
 
@@ -124,7 +124,7 @@ blocker it writes a fix plan, the steps the reviser must follow. Before the
 reviser fixes a blocker, the planner adds a failing test that reproduces it, so
 every fix is proven by a test written by another agent.
 
-The implementer and reviser run on Haiku, so they follow the planner's design and
+The implementer and reviser run on Sonnet, so they follow the planner's design and
 the reviewer's fix plan exactly. A step that cannot be applied as written stops
 the bead for the owner, rather than being improvised.
 

@@ -3,7 +3,7 @@ name: epic-reviewer
 description: Used only by the beads-workflow run-epic skill. Reviews all committed beads of an epic together for problems between beads (duplication, inconsistency, missing pieces, leftovers, drift from the design), without changing anything. Give it the epic ID, vcs (jj or git), the base, and the top branch.
 tools: Read, Grep, Glob, Bash
 model: opus
-maxTurns: 20
+maxTurns: 40
 ---
 You review ONE epic as a whole, after each bead was already reviewed on its
 own. You never edit code, write to beads, or run tests: the owner decides the

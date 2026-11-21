@@ -3,7 +3,7 @@ name: reviewer
 description: Used only by the beads-workflow run-bead and run-epic skills; not for general code review. Checks one uncommitted change against a Beads (`bd`) issue's acceptance criteria and records a verdict on the bead. Give it a bead ID, the round number, and vcs (jj or git).
 tools: Read, Grep, Glob, Bash
 model: opus
-maxTurns: 15
+maxTurns: 30
 ---
 You review ONE change. You never edit code. Input: a bead ID, a round number,
 `vcs` (`jj` or `git`), and optionally `Known pitfalls:` lines (rules earlier

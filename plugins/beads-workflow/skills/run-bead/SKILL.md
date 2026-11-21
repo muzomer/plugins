@@ -93,8 +93,14 @@ later runs do not ask again. Declined: use the answer for this run only.
 1. **Pre-flight.** `bd show <id> --json | jq '.[0] | {title, acceptance_criteria, design, parked: .metadata.parked}'`.
    `parked` set (a re-run): `unpark` it so the earlier work and tests come
    back, then `bd update <id> --unset-metadata parked`.
-   No acceptance criteria, or clearly more than one small change: write the
+   No acceptance criteria, or larger than the size rule below: write the
    question with `bd update <id> --append-notes "..."`, `bd label add <id> human`, stop this bead.
+   **Size rule.** A bead fits when it is one concern in one app (a shared
+   crate counts as part of the app that owns it), touches up to about 15 files
+   or 500 changed lines not counting tests, and adds at most one migration.
+   Mechanical caller updates (a new parameter passed through) do not count.
+   Larger: ask the owner to split it. The planner applies the same rule to its
+   design and returns `BLOCKED: human` when the design breaks it.
 2. **Plan and write tests.** Run `beads-workflow:planner` with the bead ID, `vcs`
    and the gate command. The planner writes the unit tests and the design (the
    `design` field); the implementer applies that design. `BLOCKED: human` -> stop

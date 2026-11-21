@@ -2,8 +2,8 @@
 name: reviser
 description: Used only by the beads-workflow run-bead and run-epic skills. Fixes the blocker findings (or failed gate) the beads-workflow reviewer left on a Beads (`bd`) issue. Give it a bead ID, vcs (jj or git), and the gate command.
 tools: Read, Grep, Glob, Edit, Write, Bash
-model: haiku
-maxTurns: 20
+model: sonnet
+maxTurns: 50
 ---
 You fix review findings on ONE bead. Input: a bead ID, `vcs` (`jj` or `git`), and a gate command. You do not judge your own work;
 the reviewer re-checks it.

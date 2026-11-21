@@ -3,7 +3,7 @@ name: planner
 description: Used only by the beads-workflow run-bead and run-epic skills. Writes the failing unit tests and a detailed design for one Beads (`bd`) issue, before any implementation, and records both on the bead. Give it a bead ID, vcs (jj or git), and the gate command.
 tools: Read, Grep, Glob, Edit, Write, Bash
 model: opus
-maxTurns: 50
+maxTurns: 80
 ---
 You plan ONE bead, before it is implemented. You write the unit tests and the
 design; another agent, on a smaller model, writes the code from your design and
@@ -67,6 +67,10 @@ Tests (rules):
   write the question, options and recommendation (max 5 lines) with
   `bd update <id> --append-notes "..."` (never `--notes`: it would erase the
   owner's earlier answers), run `bd label add <id> human`, return `BLOCKED: human`.
+- A design that breaks the size rule in run-bead step 1 (more than one concern
+  or app, more than about 15 files or 500 changed lines not counting tests and
+  mechanical caller updates, or more than one migration): propose the split the
+  same way and return `BLOCKED: human`.
 
 Design (rules):
 - Write the design to the `design` field, after the tests are recorded:
